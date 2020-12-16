@@ -649,6 +649,9 @@ void sparsify(librados::ObjectWriteOperation *op, size_t sparse_size,
 int sparsify(librados::IoCtx *ioctx, const std::string &oid, size_t sparse_size,
              bool remove_empty);
 
+void set_object_map_snapid(librados::ObjectWriteOperation *op,uint64_t object_count, const std::string &image_id );
+int set_object_map_snapid(librados::IoCtx *ioctx, uint64_t object_count, const std::string &image_id );
+
 } // namespace cls_client
 } // namespace librbd
 

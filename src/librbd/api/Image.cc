@@ -22,6 +22,10 @@
 #include "librbd/image/PreRemoveRequest.h"
 #include <boost/scope_exit.hpp>
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::api::Image: " << __func__ << ": "
@@ -600,6 +604,13 @@ int Image<I>::deep_copy(I *src, librados::IoCtx& dest_md_ctx,
 
   int r;
   if (parent_spec.pool_id == -1) {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::api::Image.cc::deep_copy()\n";
+      ofile.close();
     r = create(dest_md_ctx, destname, "", src_size, opts, "", "", false);
   } else {
     librados::IoCtx parent_io_ctx;

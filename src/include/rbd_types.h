@@ -29,7 +29,7 @@
 #define RBD_OBJECT_MAP_PREFIX  "rbd_object_map."
 #define RBD_DATA_PREFIX        "rbd_data."
 #define RBD_ID_PREFIX          "rbd_id."
-
+#define RBD_OBJECT_MAP_SNAPID_PREFIX "rbd_object_map_snapid."
 /*
  * old-style rbd image 'foo' consists of objects
  *   foo.rbd      - image metadata

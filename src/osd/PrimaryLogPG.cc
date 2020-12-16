@@ -52,6 +52,10 @@
 #include "include/ceph_assert.h"  // json_spirit clobbers it
 #include "include/rados/rados_types.hpp"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #ifdef WITH_LTTNG
 #include "tracing/osd.h"
 #else
@@ -2141,7 +2145,7 @@ void PrimaryLogPG::do_op(OpRequestRef& op)
     oid, &obc, can_create,
     m->has_flag(CEPH_OSD_FLAG_MAP_SNAP_CLONE),
     &missing_oid);
-
+    dout(2) << "come to osd::PrimaryLogPG.cc::do_op()-find_object_context() " << dendl;
   // LIST_SNAPS needs the ssc too
   if (obc &&
       m->get_snapid() == CEPH_SNAPDIR &&
@@ -2316,7 +2320,7 @@ void PrimaryLogPG::do_op(OpRequestRef& op)
   }
 
   op->mark_started();
-
+  dout(2) << "come to osd::PrimaryLogPG.cc::do_op()-execute_ctx() " << dendl;
   execute_ctx(ctx);
   utime_t prepare_latency = ceph_clock_now();
   prepare_latency -= op->get_dequeued_time();
@@ -3894,7 +3898,7 @@ void PrimaryLogPG::execute_ctx(OpContext *ctx)
   }
 
   int result = prepare_transaction(ctx);
-
+    dout(2) << " come to osd::PrimaryLogPG.cc::prepare_transaction() " << dendl;
   {
 #ifdef WITH_LTTNG
     osd_reqid_t reqid = ctx->op->get_reqid();
@@ -5838,6 +5842,9 @@ int PrimaryLogPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	ceph_assert(result == 0);   // init_op_flags() already verified this works.
 
 	ClassHandler::ClassMethod *method = cls->get_method(mname);
+	dout(2) << "come to osd::PrimaryLog.cc::CEPH_OSD_OP_CALL"<<"cname:"<<cname<<" mname:"<<mname << dendl;
+	if(cname=="rbd" && mname =="set_object_map_snapid")
+	    dout(2) << "come to osd::PrimaryLog.cc::CEPH_OSD_OP_CALL:: rbd set_object_map_snapid" << dendl;
 	if (!method) {
 	  dout(10) << "call method " << cname << "." << mname << " does not exist" << dendl;
 	  result = -EOPNOTSUPP;
@@ -6364,7 +6371,13 @@ int PrimaryLogPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	  result = -EOPNOTSUPP;
 	  break;
 	}
-
+//	ofstream ofile;
+//	ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+//	if(!ofile.is_open()){
+//	    cout<<"open file error!";
+//	}
+//	ofile<<"come to osd::PrimaryLogPG.cc::do_osd_op()|| case CEPH_OSD_OP_WRITE\n";
+//	ofile.close();
 	if (!obs.exists) {
 	  if (pool.info.requires_aligned_append() && op.extent.offset) {
 	    result = -EOPNOTSUPP;
@@ -8208,7 +8221,7 @@ void PrimaryLogPG::make_writeable(OpContext *ctx)
     snap_oi->copy_user_bits(ctx->obs->oi);
 
     _make_clone(ctx, ctx->op_t.get(), ctx->clone_obc, soid, coid, snap_oi);
-    
+    dout(2) << " come to osd::PrimaryLogPG.cc::prepare_transaction()-make_writeable()-_make_clone() " << dendl;
     ctx->delta_stats.num_objects++;
     if (snap_oi->is_dirty()) {
       ctx->delta_stats.num_objects_dirty++;
@@ -8511,7 +8524,7 @@ int PrimaryLogPG::prepare_transaction(OpContext *ctx)
   // clone, if necessary
   if (soid.snap == CEPH_NOSNAP)
     make_writeable(ctx);
-
+  dout(2) << " come to osd::PrimaryLogPG.cc::prepare_transaction()-make_writeable() " << dendl;
   finish_ctx(ctx,
 	     ctx->new_obs.exists ? pg_log_entry_t::MODIFY :
 	     pg_log_entry_t::DELETE,

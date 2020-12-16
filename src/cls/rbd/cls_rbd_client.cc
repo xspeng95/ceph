@@ -9,6 +9,10 @@
 #include "include/rados/librados.hpp"
 #include "common/bit_vector.hpp"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #include <errno.h>
 
 namespace librbd {
@@ -24,7 +28,13 @@ void create_image(librados::ObjectWriteOperation *op, uint64_t size,
   encode(features, bl);
   encode(object_prefix, bl);
   encode(data_pool_id, bl);
-
+  ofstream ofile;
+  ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+  if(!ofile.is_open()){
+      cout<<"open file error!";
+  }
+  ofile<<"come to cls::rbd::cls_rbd_client.cc::create_image()\n";
+  ofile.close();
   op->exec("rbd", "create", bl);
 }
 
@@ -37,7 +47,20 @@ int create_image(librados::IoCtx *ioctx, const std::string &oid,
 
   return ioctx->operate(oid, &op);
 }
+void set_object_map_snapid(librados::ObjectWriteOperation *op,uint64_t object_count, const std::string &image_id)
+{
+    bufferlist bl;
+    encode(image_id,bl);
+    encode(object_count,bl);
+    op->exec("rbd","set_object_map_snapid",bl);
+}
 
+int set_object_map_snapid(librados::IoCtx *ioctx, uint64_t object_count, const std::string &image_id )
+{
+    librados::ObjectWriteOperation op;
+    set_object_map_snapid(&op,object_count,image_id);
+    return ioctx->operate(image_id, &op);
+}
 void get_features_start(librados::ObjectReadOperation *op, bool read_only)
 {
   bufferlist bl;
@@ -1291,7 +1314,15 @@ void dir_add_image(librados::ObjectWriteOperation *op,
   bufferlist bl;
   encode(name, bl);
   encode(id, bl);
+  ofstream ofile;
+  ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+  if(!ofile.is_open()){
+      cout<<"open file error!";
+  }
+  ofile<<"come to cls::rbd::cls_rbd_client.cc::dir_add_image() || rbd air_add_image bl\n";
+  ofile.close();
   op->exec("rbd", "dir_add_image", bl);
+
 }
 
 int dir_add_image(librados::IoCtx *ioctx, const std::string &oid,

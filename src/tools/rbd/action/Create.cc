@@ -11,6 +11,10 @@
 #include <iostream>
 #include <boost/program_options.hpp>
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 namespace rbd {
 namespace action {
 namespace create {
@@ -232,6 +236,13 @@ int execute(const po::variables_map &vm,
 
   librbd::RBD rbd;
   r = do_create(rbd, io_ctx, image_name.c_str(), size, opts);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to tools::rbd::action::Create.cc::do_create()(call create4())\n";
+    ofile.close();
   if (!namespace_name.empty() && r == -ENOENT) {
     std::cerr << "rbd: namespace not found - it must be created with "
               << "'rbd namespace create' before creating an image."

@@ -58,6 +58,10 @@
 #include <boost/variant.hpp>
 #include "include/ceph_assert.h"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd: "
@@ -580,7 +584,13 @@ int validate_pool(IoCtx &io_ctx, CephContext *cct) {
 
     int r = opts.set(RBD_IMAGE_OPTION_ORDER, order_);
     ceph_assert(r == 0);
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::internal.cc::create()1\n";
+    ofile.close();
     r = create(io_ctx, imgname, "", size, opts, "", "", false);
 
     int r1 = opts.get(RBD_IMAGE_OPTION_ORDER, &order_);
@@ -612,7 +622,13 @@ int validate_pool(IoCtx &io_ctx, CephContext *cct) {
     ceph_assert(r == 0);
     r = opts.set(RBD_IMAGE_OPTION_STRIPE_COUNT, stripe_count);
     ceph_assert(r == 0);
-
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::internal.cc::create()\n";
+      ofile.close();
     r = create(io_ctx, imgname, "", size, opts, "", "", false);
 
     int r1 = opts.get(RBD_IMAGE_OPTION_ORDER, &order_);
@@ -629,6 +645,13 @@ int validate_pool(IoCtx &io_ctx, CephContext *cct) {
              const std::string &primary_mirror_uuid,
              bool skip_mirror_enable)
   {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::internal.cc::create()3\n";
+
     std::string id(image_id);
     if (id.empty()) {
       id = util::generate_image_id(io_ctx);
@@ -699,15 +722,19 @@ int validate_pool(IoCtx &io_ctx, CephContext *cct) {
                           &mirror_image_mode) == 0) {
         create_flags = image::CREATE_FLAG_FORCE_MIRROR_ENABLE;
       }
-
+//添加一个回调函数和创建请求。跳转至librbd/image/CreateRequest.cc中
+      ofile<<"come to librbd::internal.cc::create()3-before_cond\n";
       C_SaferCond cond;
       image::CreateRequest<> *req = image::CreateRequest<>::create(
         config, io_ctx, image_name, id, size, opts, create_flags,
         static_cast<cls::rbd::MirrorImageMode>(mirror_image_mode),
         non_primary_global_image_id, primary_mirror_uuid, op_work_queue, &cond);
+      ofile<<"come to librbd::internal.cc::create()3-after-CreateRequest\n";
       req->send();
-
+      ofile<<"come to librbd::internal.cc::create()3-after-req->send\n";
       r = cond.wait();
+      ofile<<"come to librbd::internal.cc::create()3-after-conf.wait || r="<<r<<"\n";
+      ofile.close();
     }
 
     int r1 = opts.set(RBD_IMAGE_OPTION_ORDER, order);
@@ -1146,7 +1173,13 @@ int validate_pool(IoCtx &io_ctx, CephContext *cct) {
       lderr(cct) << "librbd does not support requested features" << dendl;
       return -ENOSYS;
     }
-
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::internal.cc::copy()\n";
+      ofile.close();
     int r = create(dest_md_ctx, destname, "", src_size, opts, "", "", false);
     if (r < 0) {
       lderr(cct) << "header creation failed" << dendl;

@@ -43,6 +43,10 @@
 #include <stdexcept>
 #include <system_error>
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #ifdef WITH_LTTNG
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
@@ -162,6 +166,13 @@ void librados::ObjectOperation::exec(const char *cls, const char *method, buffer
 {
   ceph_assert(impl);
   ::ObjectOperation *o = &impl->o;
+  ofstream ofile;
+  ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+  if(!ofile.is_open()){
+      cout<<"open file error!";
+  }
+  ofile<<"come to librados::librados_cxx.cc::exec() ||cls:"<<cls<<" method: "<<method<<"\n";
+  ofile.close();
   o->call(cls, method, inbl);
 }
 

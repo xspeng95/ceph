@@ -17,6 +17,10 @@
 #include "librbd/io/ImageDispatchSpec.h"
 #include "common/EventTrace.h"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::io::ImageRequestWQ: " << this \
@@ -151,6 +155,15 @@ ssize_t ImageRequestWQ<I>::write(uint64_t off, uint64_t len,
 
   C_SaferCond cond;
   AioCompletion *c = AioCompletion::create(&cond);
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::io::ImageRequestWQ.cc::write()\n";
+    ofile.close();
+
   aio_write(c, off, len, std::move(bl), op_flags, false);
 
   r = cond.wait();
@@ -359,7 +372,13 @@ void ImageRequestWQ<I>::aio_write(AioCompletion *c, uint64_t off, uint64_t len,
     std::lock_guard locker{m_lock};
     m_queued_or_blocked_io_tids.insert(tid);
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::io::ImageRequstWQ.cc::aio_write()\n";
+    ofile.close();
   ImageDispatchSpec<I> *req = ImageDispatchSpec<I>::create_write_request(
           m_image_ctx, c, {{off, len}}, std::move(bl), op_flags, trace, tid);
 
@@ -1031,7 +1050,13 @@ void ImageRequestWQ<I>::process_io(ImageDispatchSpec<I> *req,
       return;
     }
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::io::ImageRequesWQ.cc::process_io()\n";
+    ofile.close();
   req->start_op();
   req->send();
 

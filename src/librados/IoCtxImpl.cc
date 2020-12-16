@@ -775,11 +775,18 @@ int librados::IoCtxImpl::aio_operate(const object_t& oid,
     ZTracer::Trace parent_trace("", nullptr, trace_info);
     trace.init("rados operate", &objecter->trace_endpoint, &parent_trace);
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librados::IoCtxImpl.cc::aio_operate():objecter->prepare_mutate_op\n";
   trace.event("init root span");
   Objecter::Op *op = objecter->prepare_mutate_op(
     oid, oloc, *o, snap_context, ut, flags,
     oncomplete, &c->objver, osd_reqid_t(), &trace);
+    ofile<<"come to librados::IoCtxImpl.cc::aio_operate():objecter->op_submit\n";
+    ofile.close();
   objecter->op_submit(op, &c->tid);
   trace.event("rados operate op submitted");
 

@@ -45,6 +45,10 @@
 
 #include "osd/OSDMap.h"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 class Context;
 class Messenger;
 class MonClient;
@@ -155,6 +159,14 @@ struct ObjectOperation {
     osd_op.indata.append(cname, osd_op.op.cls.class_len);
     osd_op.indata.append(method, osd_op.op.cls.method_len);
     osd_op.indata.append(indata);
+
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to osdc::Object.h::add_call()||cname "<<cname<<" method:"<<method<<"\n";
+      ofile.close();
   }
   void add_pgls(int op, uint64_t count, collection_list_handle_t cookie,
 		epoch_t start_epoch) {
@@ -1012,7 +1024,15 @@ struct ObjectOperation {
 
   // object classes
   void call(const char *cname, const char *method, ceph::buffer::list &indata) {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to osdc::Object.h::call\n";
+      ofile.close();
     add_call(CEPH_OSD_OP_CALL, cname, method, indata, NULL, NULL, NULL);
+
   }
 
   void call(const char *cname, const char *method, ceph::buffer::list &indata,

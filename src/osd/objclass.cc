@@ -15,6 +15,10 @@
 #include "auth/Crypto.h"
 #include "common/armor.h"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #define dout_context ClassHandler::get_instance().cct
 
 
@@ -212,6 +216,13 @@ int cls_cxx_write2(cls_method_context_t hctx, int ofs, int len,
   ops[0].op.extent.length = len;
   ops[0].op.flags = op_flags;
   ops[0].indata = *inbl;
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to osd::objclass.cc::cls_cxx_write2()\n";
+    ofile.close();
   return (*pctx)->pg->do_osd_ops(*pctx, ops);
 }
 

@@ -44,6 +44,10 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 /*
  * Object keys:
  *
@@ -2837,6 +2841,63 @@ int set_id(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   bufferlist write_bl;
   encode(id, write_bl);
   return cls_cxx_write(hctx, 0, write_bl.length(), &write_bl);
+}
+
+/**
+ * Set the snapid map of objects. The object must already exist.
+ *
+ * Input:
+ * @param id the id of the image, as an alpha-numeric string
+ *
+ * Output:
+ * @returns 0 on success, -EEXIST if the atomic create fails,
+ *          negative error code on other error
+ */
+int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+{
+    int r = check_exists(hctx);
+    if (r < 0)
+        return r;
+
+    string image_id;
+    uint64_t object_count;
+    try {
+        auto iter = in->cbegin();
+        decode(image_id, iter);
+        decode(object_count,iter);
+    } catch (const buffer::error &err) {
+        return -EINVAL;
+    }
+
+    if (!is_valid_id(image_id)) {
+        CLS_ERR("set_id: invalid id '%s'", image_id.c_str());
+        return -EINVAL;
+    }
+
+    uint64_t size;
+    r = cls_cxx_stat(hctx, &size, NULL);
+    if (r < 0)
+        return r;
+    if (size != 0)
+        return -EEXIST;
+
+    CLS_LOG(20, "set_object_map_snapid successed!");
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()\n";
+
+
+// set default image id as object map snapid
+    bufferlist write_bl;
+    for (int i=0;i<object_count;i++){
+        encode(image_id, write_bl);
+    }
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| add snapid to bufferlist\n";
+    ofile.close();
+    return cls_cxx_write(hctx, 0, write_bl.length(), &write_bl);
 }
 
 /**
@@ -8114,6 +8175,7 @@ CLS_INIT(rbd)
   cls_method_handle_t h_get_all_features;
   cls_method_handle_t h_get_id;
   cls_method_handle_t h_set_id;
+  cls_method_handle_t h_set_object_map_snapid;
   cls_method_handle_t h_set_modify_timestamp;
   cls_method_handle_t h_set_access_timestamp;
   cls_method_handle_t h_dir_get_id;
@@ -8376,6 +8438,12 @@ CLS_INIT(rbd)
   cls_register_cxx_method(h_class, "set_id",
 			  CLS_METHOD_RD | CLS_METHOD_WR,
 			  set_id, &h_set_id);
+
+  /* methods for the object_map_snapid.$image_id objects */
+  cls_register_cxx_method(h_class,"set_object_map_snapid",
+                          CLS_METHOD_RD | CLS_METHOD_WR,
+                          set_object_map_snapid,&h_set_object_map_snapid);
+
 
   /* methods for the rbd_directory object */
   cls_register_cxx_method(h_class, "dir_get_id",

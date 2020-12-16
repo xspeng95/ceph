@@ -34,7 +34,10 @@ const std::string header_name(const std::string &image_id)
 {
   return RBD_HEADER_PREFIX + image_id;
 }
-
+const std::string id_obj_map_snapid_name(const std::string &image_id)
+{
+    return RBD_OBJECT_MAP_SNAPID_PREFIX + image_id;
+}
 const std::string old_header_name(const std::string &image_name)
 {
   return image_name + RBD_SUFFIX;

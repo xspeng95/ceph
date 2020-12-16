@@ -19,6 +19,9 @@
 #include "librbd/mirror/EnableRequest.h"
 #include "journal/Journaler.h"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -133,6 +136,7 @@ CreateRequest<I>::CreateRequest(const ConfigProxy& config, IoCtx &ioctx,
   m_id_obj = util::id_obj_name(m_image_name);
   m_header_obj = util::header_name(m_image_id);
   m_objmap_name = ObjectMap<>::object_map_name(m_image_id, CEPH_NOSNAP);
+  m_id_obj_map_snapid_name= util::id_obj_map_snapid_name(m_image_id);
   if (!non_primary_global_image_id.empty() &&
       (m_create_flags & CREATE_FLAG_MIRROR_ENABLE_MASK) == 0) {
     m_create_flags |= CREATE_FLAG_FORCE_MIRROR_ENABLE;
@@ -222,6 +226,14 @@ CreateRequest<I>::CreateRequest(const ConfigProxy& config, IoCtx &ioctx,
                    << (uint64_t)m_journal_splay_width << ", "
                    << "journal_pool=" << m_journal_pool << ", "
                    << "data_pool=" << m_data_pool << dendl;
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::create()\n";
+    ofile.close();
 }
 
 template<typename I>
@@ -440,12 +452,18 @@ void CreateRequest<I>::create_image() {
     remove_id_object();
     return;
   }
-
+//在send函数调用中比较中的函数，创建镜像。通过cls_client到达了rados层
   librados::ObjectWriteOperation op;
   op.create(true);
   cls_client::create_image(&op, m_size, m_order, m_features, oss.str(),
                            m_data_pool_id);
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::create_image()(cls_client)\n";
+    ofile.close();
   using klass = CreateRequest<I>;
   librados::AioCompletion *comp =
     create_rados_callback<klass, &klass::handle_create_image>(this);
@@ -541,10 +559,60 @@ void CreateRequest<I>::handle_object_map_resize(int r) {
     remove_header_object();
     return;
   }
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::handle_object_map_resize()(cls_client)\n";
+    ofile.close();
 
-  fetch_mirror_mode();
+  add_object_map_snapid();
+}
+template<typename I>
+void CreateRequest<I>::add_object_map_snapid(){
+    ldout(m_cct, 15) << "add_abject_snapid" << dendl;
+
+    librados::ObjectWriteOperation op;
+    op.create(true);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::add_object_map_snapid()(cls_client)\n";
+
+    cls_client::set_object_map_snapid(&op, Striper::get_num_objects(m_layout, m_size), m_image_id);
+    ofile<<"come to librbd::image::CreateRequest.cc::set_object_map_snapid()(cls_client)\n";
+    using klass = CreateRequest<I>;
+    librados::AioCompletion *comp =
+            create_rados_callback<klass, &klass::handle_add_object_map_snapid>(this);
+    int r = m_io_ctx.aio_operate(m_id_obj_map_snapid_name, comp, &op);
+    ofile<<"come to librbd::image::CreateRequest.cc::m_io_ctx.aio_operate()(cls_client)\n";
+    ofile.close();
+    ceph_assert(r == 0);
+    comp->release();
 }
 
+template<typename I>
+void CreateRequest<I>::handle_add_object_map_snapid(int r){
+    ldout(m_cct, 15) << "add_abject_snapid" << dendl;
+    if (r < 0) {
+        lderr(m_cct) << "cannot enable mirroring: " << cpp_strerror(r)
+        << dendl;
+        m_r_saved = r;
+        journal_remove();
+        return;
+    }
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::fetch_mirror_mode()(cls_client)\n";
+    ofile.close();
+    fetch_mirror_mode();
+}
 template<typename I>
 void CreateRequest<I>::fetch_mirror_mode() {
   if ((m_features & RBD_FEATURE_JOURNALING) == 0) {
@@ -556,7 +624,13 @@ void CreateRequest<I>::fetch_mirror_mode() {
 
   librados::ObjectReadOperation op;
   cls_client::mirror_mode_get_start(&op);
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::cls_client::mirror_mode_get_start()(cls_client)\n";
+    ofile.close();
   using klass = CreateRequest<I>;
   librados::AioCompletion *comp =
     create_rados_callback<klass, &klass::handle_fetch_mirror_mode>(this);
@@ -591,7 +665,13 @@ void CreateRequest<I>::handle_fetch_mirror_mode(int r) {
       return;
     }
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::handle_fetch_mirror_mode()(cls_client)\n";
+    ofile.close();
   journal_create();
 }
 
@@ -602,7 +682,13 @@ void CreateRequest<I>::journal_create() {
   using klass = CreateRequest<I>;
   Context *ctx = create_context_callback<klass, &klass::handle_journal_create>(
     this);
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::journal_create()(cls_client)\n";
+    ofile.close();
   // only link to remote primary mirror uuid if in journal-based
   // mirroring mode
   bool use_primary_mirror_uuid = (
@@ -632,7 +718,13 @@ void CreateRequest<I>::handle_journal_create(int r) {
     remove_object_map();
     return;
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::mirror_image_enable()(cls_client)\n";
+    ofile.close();
   mirror_image_enable();
 }
 
@@ -669,8 +761,15 @@ void CreateRequest<I>::handle_mirror_image_enable(int r) {
     journal_remove();
     return;
   }
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::CreateRequest.cc::handle_mirror_image_enable()(cls_client)\n";
+    ofile.close();
 
-  complete(0);
+    complete(0);
 }
 
 template<typename I>

@@ -124,7 +124,7 @@ private:
   CephContext *m_cct;
   int m_r_saved = 0;  // used to return actual error after cleanup
   file_layout_t m_layout;
-  std::string m_id_obj, m_header_obj, m_objmap_name;
+  std::string m_id_obj, m_header_obj, m_objmap_name,m_id_obj_map_snapid_name;
 
   bufferlist m_outbl;
   cls::rbd::MirrorMode m_mirror_mode = cls::rbd::MIRROR_MODE_DISABLED;
@@ -159,6 +159,9 @@ private:
 
   void mirror_image_enable();
   void handle_mirror_image_enable(int r);
+
+  void add_object_map_snapid();
+  void handle_add_object_map_snapid(int r);
 
   void complete(int r);
 

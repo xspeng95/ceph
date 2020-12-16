@@ -46,6 +46,10 @@
 #include <string>
 #include <vector>
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #ifdef WITH_LTTNG
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
@@ -649,7 +653,16 @@ namespace librbd {
   {
     TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
     tracepoint(librbd, create_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, *order);
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::librbd.cc()::create()\n";
+
     int r = librbd::create(io_ctx, name, size, order);
+      ofile<<"come to librbd::librbd.cc()::create()->result:"<<r<<"\n";
+      ofile.close();
     tracepoint(librbd, create_exit, r, *order);
     return r;
   }
@@ -659,7 +672,15 @@ namespace librbd {
   {
     TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
     tracepoint(librbd, create2_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, features, *order);
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::librbd.cc()::create()2\n";
     int r = librbd::create(io_ctx, name, size, false, features, order, 0, 0);
+      ofile<<"come to librbd::librbd.cc()::create()2->result:"<<r<<"\n";
+      ofile.close();
     tracepoint(librbd, create2_exit, r, *order);
     return r;
   }
@@ -670,8 +691,17 @@ namespace librbd {
   {
     TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
     tracepoint(librbd, create3_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, features, *order, stripe_unit, stripe_count);
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::librbd.cc()::create()3\n";
+
     int r = librbd::create(io_ctx, name, size, false, features, order,
 			  stripe_unit, stripe_count);
+      ofile<<"come to librbd::librbd.cc()::create()3->result:"<<r<<"\n";
+      ofile.close();
     tracepoint(librbd, create3_exit, r, *order);
     return r;
   }
@@ -681,7 +711,15 @@ namespace librbd {
   {
     TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
     tracepoint(librbd, create4_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, opts.opts);
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::librbd.cc()::create()4\n";
     int r = librbd::create(io_ctx, name, "", size, opts, "", "", false);
+      ofile<<"come to librbd::librbd.cc()::create()4->result:"<<r<<"\n";
+      ofile.close();
     tracepoint(librbd, create4_exit, r);
     return r;
   }
@@ -2492,7 +2530,13 @@ namespace librbd {
       tracepoint(librbd, write_exit, -EINVAL);
       return -EINVAL;
     }
-
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      ofile<<"come to librbd::librbd.cc::write()\n";
+      ofile.close();
     int r = ictx->io_work_queue->write(ofs, len, bufferlist{bl}, 0);
     tracepoint(librbd, write_exit, r);
     return r;
@@ -3719,6 +3763,13 @@ extern "C" int rbd_create(rados_ioctx_t p, const char *name, uint64_t size, int 
   librados::IoCtx::from_rados_ioctx_t(p, io_ctx);
   TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
   tracepoint(librbd, create_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, *order);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::librbd.cc::rbd_create()\n";
+    ofile.close();
   int r = librbd::create(io_ctx, name, size, order);
   tracepoint(librbd, create_exit, r, *order);
   return r;
@@ -3732,6 +3783,13 @@ extern "C" int rbd_create2(rados_ioctx_t p, const char *name,
   librados::IoCtx::from_rados_ioctx_t(p, io_ctx);
   TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
   tracepoint(librbd, create2_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, features, *order);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::librbd.cc::rbd_create2()\n";
+    ofile.close();
   int r = librbd::create(io_ctx, name, size, false, features, order, 0, 0);
   tracepoint(librbd, create2_exit, r, *order);
   return r;
@@ -3746,6 +3804,13 @@ extern "C" int rbd_create3(rados_ioctx_t p, const char *name,
   librados::IoCtx::from_rados_ioctx_t(p, io_ctx);
   TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
   tracepoint(librbd, create3_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, features, *order, stripe_unit, stripe_count);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::librbd.cc::rbd_create3()\n";
+    ofile.close();
   int r = librbd::create(io_ctx, name, size, false, features, order,
 			stripe_unit, stripe_count);
   tracepoint(librbd, create3_exit, r, *order);
@@ -3760,6 +3825,13 @@ extern "C" int rbd_create4(rados_ioctx_t p, const char *name,
   TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
   tracepoint(librbd, create4_enter, io_ctx.get_pool_name().c_str(), io_ctx.get_id(), name, size, opts);
   librbd::ImageOptions opts_(opts);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::librbd.cc::rbd_create4()\n";
+    ofile.close();
   int r = librbd::create(io_ctx, name, "", size, opts_, "", "", false);
   tracepoint(librbd, create4_exit, r);
   return r;
@@ -5827,6 +5899,13 @@ extern "C" ssize_t rbd_write(rbd_image_t image, uint64_t ofs, size_t len,
 
   bufferlist bl;
   bl.push_back(create_write_raw(ictx, buf, len, nullptr));
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::librbd.cc::rbd_write()\n";
+    ofile.close();
   int r = ictx->io_work_queue->write(ofs, len, std::move(bl), 0);
   tracepoint(librbd, write_exit, r);
   return r;
@@ -5841,6 +5920,13 @@ extern "C" ssize_t rbd_write2(rbd_image_t image, uint64_t ofs, size_t len,
 
   bufferlist bl;
   bl.push_back(create_write_raw(ictx, buf, len, nullptr));
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::librbd.cc::rbd_write()2\n";
+    ofile.close();
   int r = ictx->io_work_queue->write(ofs, len, std::move(bl), op_flags);
   tracepoint(librbd, write_exit, r);
   return r;
