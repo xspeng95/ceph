@@ -47,6 +47,7 @@ int create_image(librados::IoCtx *ioctx, const std::string &oid,
 
   return ioctx->operate(oid, &op);
 }
+
 void set_object_map_snapid(librados::ObjectWriteOperation *op,uint64_t object_count, const std::string &image_id)
 {
     bufferlist bl;
@@ -61,6 +62,43 @@ int set_object_map_snapid(librados::IoCtx *ioctx, uint64_t object_count, const s
     set_object_map_snapid(&op,object_count,image_id);
     return ioctx->operate(image_id, &op);
 }
+
+void get_object_map_snapid_start(librados::ObjectReadOperation *op,uint64_t object_count,const std::string &image_id)
+{
+    bufferlist  bl;
+    encode(image_id,bl);
+    encode(object_count,bl);
+    op->exec("rbd","get_object_map_snapid",bl);
+}
+
+int get_object_map_snapid_finish(bufferlist::const_iterator *it, bufferlist *object_map_out,uint64_t object_count)
+{
+    std::string image_id_temp;
+    for(uint64_t i=0;i<object_count;i++){
+        try {
+            decode(image_id_temp,*it);
+        }catch (const buffer::error &err){
+            return -EINVAL;
+        }
+        encode(image_id_temp,*object_map_out);
+    }
+    return 0;
+}
+
+int get_object_map_snapid(librados::IoCtx *ioctx, const std::string &oid,uint64_t object_count,const std::string &image_id,bufferlist *object_map_out)
+{
+    librados::ObjectReadOperation op;
+    get_object_map_snapid_start(&op, object_count,image_id);
+
+    bufferlist  out_bl;
+    int r=ioctx->operate(oid,&op,&out_bl);
+    if(r<0){
+        return r;
+    }
+    auto it=out_bl.cbegin();
+    return get_object_map_snapid_finish(&it, object_map_out,object_count);
+}
+
 void get_features_start(librados::ObjectReadOperation *op, bool read_only)
 {
   bufferlist bl;

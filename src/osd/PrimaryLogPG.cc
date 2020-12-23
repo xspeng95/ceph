@@ -5845,6 +5845,8 @@ int PrimaryLogPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	dout(2) << "come to osd::PrimaryLog.cc::CEPH_OSD_OP_CALL"<<"cname:"<<cname<<" mname:"<<mname << dendl;
 	if(cname=="rbd" && mname =="set_object_map_snapid")
 	    dout(2) << "come to osd::PrimaryLog.cc::CEPH_OSD_OP_CALL:: rbd set_object_map_snapid" << dendl;
+	if(cname=="rbd" && mname =="get_object_map_snapid")
+        dout(2) << "come to osd::PrimaryLog.cc::CEPH_OSD_OP_CALL:: rbd get_object_map_snapid" << dendl;
 	if (!method) {
 	  dout(10) << "call method " << cname << "." << mname << " does not exist" << dendl;
 	  result = -EOPNOTSUPP;

@@ -35,6 +35,8 @@
 #include <boost/lockfree/policies.hpp>
 #include <boost/lockfree/queue.hpp>
 
+#include "include/cpp-bplustree/BpTree.hpp"
+
 class ContextWQ;
 class Finisher;
 class ThreadPool;
@@ -101,6 +103,7 @@ namespace librbd {
     uint32_t read_only_flags = 0U;
     uint32_t read_only_mask = ~0U;
 
+
     std::map<rados::cls::lock::locker_id_t,
 	     rados::cls::lock::locker_info_t> lockers;
     bool exclusive_locked;
@@ -148,6 +151,8 @@ namespace librbd {
     std::string object_prefix;
     char *format_string;
     std::string header_oid;
+    bufferlist object_map_snapid_bpl;
+    BpTree bptree;
     std::string id; // only used for new-format images
     ParentImageInfo parent_md;
     ImageCtx *parent;

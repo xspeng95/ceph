@@ -22,6 +22,10 @@
 #include "librbd/io/ImageRequestWQ.h"
 #include "librbd/journal/Policy.h"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::image::RefreshRequest: "
@@ -352,6 +356,14 @@ void RefreshRequest<I>::send_v2_get_mutable_metadata() {
   cls_client::get_flags_start(&op, CEPH_NOSNAP);
   cls_client::get_snapcontext_start(&op);
   rados::cls::lock::get_lock_info_start(&op, RBD_LOCK_NAME);
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_mutable_metadata()\n";
+    ofile.close();
 
   using klass = RefreshRequest<I>;
   librados::AioCompletion *comp = create_rados_callback<

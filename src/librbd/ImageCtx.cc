@@ -36,6 +36,8 @@
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include "include/cpp-bplustree/BpTree.hpp"
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::ImageCtx: "
@@ -124,12 +126,15 @@ public:
       io_work_queue(nullptr), op_work_queue(nullptr),
       event_socket_completions(32),
       asok_hook(nullptr),
-      trace_endpoint("librbd")
+      trace_endpoint("librbd"),
+      bptree(4)
   {
     md_ctx.dup(p);
     data_ctx.dup(p);
     if (snap)
       snap_name = snap;
+
+
 
     // FIPS zeroization audit 20191117: this memset is not security related.
     memset(&header, 0, sizeof(header));
@@ -154,6 +159,7 @@ public:
 		     uint64_t snap_id, IoCtx& p, bool ro)
     : ImageCtx(image_name, image_id, "", p, ro) {
     open_snap_id = snap_id;
+
   }
 
   ImageCtx::~ImageCtx() {
@@ -928,4 +934,6 @@ public:
     *timer = safe_timer_singleton;
     *timer_lock = &safe_timer_singleton->lock;
   }
+
+
 }

@@ -18,6 +18,13 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include "include/ceph_assert.h"
 
+#include "include/cpp-bplustree/BpTree.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <ctime>
+using namespace std;
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::image::OpenRequest: "
@@ -47,6 +54,15 @@ void OpenRequest<I>::send() {
   if (m_image_ctx->old_format) {
     send_v1_detect_header();
   } else {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      time_t now = time(0);
+      char* dt = ctime(&now);
+      ofile<<dt<<"come to librbd::image::OpenRequest.cc::send()\n";
+      ofile.close();
     send_v2_detect_header();
   }
 }
@@ -97,7 +113,15 @@ void OpenRequest<I>::send_v2_detect_header() {
 
     librados::ObjectReadOperation op;
     op.stat(NULL, NULL, NULL);
-
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      time_t now = time(0);
+      char* dt = ctime(&now);
+      ofile<<dt<<"come to librbd::image::OpenRequest.cc::send_v2_detect_header()\n";
+      ofile.close();
     using klass = OpenRequest<I>;
     librados::AioCompletion *comp =
       create_rados_callback<klass, &klass::handle_v2_detect_header>(this);
@@ -135,7 +159,15 @@ void OpenRequest<I>::send_v2_get_id() {
 
   librados::ObjectReadOperation op;
   cls_client::get_id_start(&op);
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<"come to librbd::image::OpenRequest.cc::send_v2_get_id()\n";
+    ofile.close();
   using klass = OpenRequest<I>;
   librados::AioCompletion *comp =
     create_rados_callback<klass, &klass::handle_v2_get_id>(this);
@@ -199,6 +231,15 @@ Context *OpenRequest<I>::handle_v2_get_name(int *result) {
                    << "rbd directory, searching in rbd trash..." << dendl;
     send_v2_get_name_from_trash();
   } else {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      time_t now = time(0);
+      char* dt = ctime(&now);
+      ofile<<dt<<"come to librbd::image::OpenRequest.cc::handle_v2_get_name()\n";
+      ofile.close();
     send_v2_get_initial_metadata();
   }
   return nullptr;
@@ -269,6 +310,16 @@ void OpenRequest<I>::send_v2_get_initial_metadata() {
   m_out_bl.clear();
   m_image_ctx->md_ctx.aio_operate(m_image_ctx->header_oid, comp, &op,
                                   &m_out_bl);
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::send_v2_get_initial_metadata()\n";
+    ofile.close();
   comp->release();
 }
 
@@ -281,6 +332,7 @@ Context *OpenRequest<I>::handle_v2_get_initial_metadata(int *result) {
   if (*result >= 0) {
     uint64_t size;
     *result = cls_client::get_size_finish(&it, &size, &m_image_ctx->order);
+    m_size=size;
   }
 
   if (*result >= 0) {
@@ -302,8 +354,26 @@ Context *OpenRequest<I>::handle_v2_get_initial_metadata(int *result) {
   }
 
   if (m_image_ctx->test_features(RBD_FEATURE_STRIPINGV2)) {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      time_t now = time(0);
+      char* dt = ctime(&now);
+      ofile<<dt<<" come to librbd::image::OpenRequest.cc::handle_v2_get_initial_metadata()|| test_features\n";
+      ofile.close();
     send_v2_get_stripe_unit_count();
   } else {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+      if(!ofile.is_open()){
+          cout<<"open file error!";
+      }
+      time_t now = time(0);
+      char* dt = ctime(&now);
+      ofile<<dt<<" come to librbd::image::OpenRequest.cc::handle_v2_get_initial_metadata()|| test_features elseeeee\n";
+      ofile.close();
     send_v2_get_create_timestamp();
   }
 
@@ -314,7 +384,15 @@ template <typename I>
 void OpenRequest<I>::send_v2_get_stripe_unit_count() {
   CephContext *cct = m_image_ctx->cct;
   ldout(cct, 10) << this << " " << __func__ << dendl;
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::send_v2_get_stripe_unit_count()\n";
+    ofile.close();
   librados::ObjectReadOperation op;
   cls_client::get_stripe_unit_count_start(&op);
 
@@ -337,7 +415,18 @@ Context *OpenRequest<I>::handle_v2_get_stripe_unit_count(int *result) {
     *result = cls_client::get_stripe_unit_count_finish(
       &it, &m_image_ctx->stripe_unit, &m_image_ctx->stripe_count);
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::handle_v2_get_stripe_unit_count()||stripe_unit:"<<m_image_ctx->stripe_unit
+         <<" stripe_count:"<<m_image_ctx->stripe_count
+         <<" size:"<<m_image_ctx->size
+         <<"\n";
+    ofile.close();
   if (*result == -ENOEXEC || *result == -EINVAL) {
     *result = 0;
   }
@@ -387,7 +476,15 @@ Context *OpenRequest<I>::handle_v2_get_create_timestamp(int *result) {
     send_close_image(*result);
     return nullptr;
   }
-
+  ofstream ofile;
+  ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+  if(!ofile.is_open()){
+      cout<<"open file error!";
+  }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+  ofile<<dt<< " come to librbd::image::OpenRequest.cc::handle_v2_get_create_timestamp()\n";
+  ofile.close();
   send_v2_get_access_modify_timestamp();
   return nullptr;
 }
@@ -401,7 +498,15 @@ void OpenRequest<I>::send_v2_get_access_modify_timestamp() {
   cls_client::get_access_timestamp_start(&op);
   cls_client::get_modify_timestamp_start(&op);
   //TODO: merge w/ create timestamp query after luminous EOLed
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::send_v2_get_access_modify_timestamp()"<<"\n";
+    ofile.close();
   using klass = OpenRequest<I>;
   librados::AioCompletion *comp = create_rados_callback<
     klass, &klass::handle_v2_get_access_modify_timestamp>(this);
@@ -431,7 +536,16 @@ Context *OpenRequest<I>::handle_v2_get_access_modify_timestamp(int *result) {
     send_close_image(*result);
     return nullptr;
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::handle_v2_get_access_modify_timestamp() and begin to deal with object map snapid"<<"\n";
+    ofile.close();
+//  send_v2_get_object_map_snapid();
   send_v2_get_data_pool();
   return nullptr;
 }
@@ -490,10 +604,97 @@ Context *OpenRequest<I>::handle_v2_get_data_pool(int *result) {
   }
 
   m_image_ctx->init_layout(data_pool_id);
-  send_refresh();
+    send_v2_get_object_map_snapid();
   return nullptr;
 }
+template <typename I>
+void OpenRequest<I>::send_v2_get_object_map_snapid() {
+    CephContext *cct = m_image_ctx->cct;
+    ldout(cct, 10) << this << " " << __func__ << dendl;
+//    m_image_ctx->snapmap_oid = util::id_obj_map_snapid_name(m_image_ctx->id);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::send_v2_get_object_map_snapid()||internal_\n";
+    librados::ObjectReadOperation op;
+    m_layout.stripe_unit=m_image_ctx->stripe_unit;
+    m_layout.stripe_count=m_image_ctx->stripe_count;
+    m_layout.object_size=m_layout.stripe_unit;
 
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::send_v2_get_object_map_snapid()||stripe_unit:"<<m_layout.stripe_unit
+    <<" stripe_count:"<<m_layout.stripe_count
+    <<" size:"<<m_size
+    <<" period():"<<m_layout.get_period()<<"\n";
+
+
+    m_count=Striper::get_num_objects(m_layout,m_size);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::send_v2_get_object_map_snapid()||get_num_objects:"<<m_count<<"\n";
+    ofile.close();
+//    for(int i=1;i<=m_count;i++){
+//        m_image_ctx->bptree.insert(i,"aaa");
+//    }
+//
+//    m_image_ctx->bptree.printKeys();
+    cls_client::get_object_map_snapid_start(&op,m_count,m_image_ctx->id);
+
+    using klass = OpenRequest<I>;
+    librados::AioCompletion *comp = create_rados_callback<
+            klass, &klass::handle_v2_get_object_map_snapid>(this);
+    m_out_bl.clear();
+    m_image_ctx->md_ctx.aio_operate(util::id_obj_map_snapid_name(m_image_ctx->id), comp, &op,
+            &m_out_bl);
+    comp->release();
+
+}
+template <typename I>
+Context *OpenRequest<I>::handle_v2_get_object_map_snapid(int *result) {
+    CephContext *cct = m_image_ctx->cct;
+    ldout(cct, 10) << this << " " << __func__ << ": r=" << *result << dendl;
+    if(*result==0){
+        auto it=m_out_bl.cbegin();
+        *result=cls_client::get_object_map_snapid_finish(&it,&m_image_ctx->object_map_snapid_bpl,m_count);
+        string object_image_id;
+        auto iter=m_image_ctx->object_map_snapid_bpl.cbegin();
+        for(uint64_t i=0;i<m_count;i++){
+            try {
+                decode(object_image_id,iter);
+                m_image_ctx->bptree.insert(i,object_image_id);
+            } catch (const buffer::error &err) {
+                return nullptr;
+            }
+        }
+    }
+    m_image_ctx->bptree.printKeys();
+    if (*result < 0) {
+        lderr(cct) << "failed to get object map snapid : " << cpp_strerror(*result)
+        << dendl;
+        send_close_image(*result);
+        return nullptr;
+    }
+    string get_image_id;
+    try {
+        auto iter=m_image_ctx->object_map_snapid_bpl.cbegin();
+        decode(get_image_id,iter);
+    } catch (const buffer::error &err) {
+        return reinterpret_cast<Context *>(-EINVAL);
+    }
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::handle_v2_get_object_map_snapid()|| image id:"<<get_image_id<<"\n";
+    ofile.close();
+    send_refresh();
+    return nullptr;
+//    return finalize(*result);
+}
 template <typename I>
 void OpenRequest<I>::send_refresh() {
   m_image_ctx->init();
@@ -503,7 +704,15 @@ void OpenRequest<I>::send_refresh() {
 
   m_image_ctx->config_watcher = ConfigWatcher<I>::create(*m_image_ctx);
   m_image_ctx->config_watcher->init();
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    ofile<<dt<<" come to librbd::image::OpenRequest.cc::send_refresh()\n";
+    ofile.close();
   using klass = OpenRequest<I>;
   RefreshRequest<I> *req = RefreshRequest<I>::create(
     *m_image_ctx, false, m_skip_open_parent_image,
@@ -522,7 +731,6 @@ Context *OpenRequest<I>::handle_refresh(int *result) {
     send_close_image(*result);
     return nullptr;
   }
-
   return send_parent_cache(result);
 }
 
@@ -677,8 +885,9 @@ Context *OpenRequest<I>::handle_set_snap(int *result) {
     send_close_image(*result);
     return nullptr;
   }
-
-  return finalize(*result);
+  send_v2_get_object_map_snapid();
+  return nullptr;
+//  return finalize(*result);
 }
 
 template <typename I>

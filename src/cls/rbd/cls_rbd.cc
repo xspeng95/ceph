@@ -2888,17 +2888,96 @@ int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist 
         cout<<"open file error!";
     }
     ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()\n";
-
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| original image_id :"<<image_id<<"\n";
 
 // set default image id as object map snapid
     bufferlist write_bl;
-    for (int i=0;i<object_count;i++){
+    for (uint64_t i=0;i<object_count;i++){
         encode(image_id, write_bl);
     }
-    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| add snapid to bufferlist\n";
+    auto write_size=write_bl.length();
+
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image_id size:"<<write_size/object_count<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image object_count:"<<object_count<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image write_size:"<<write_size<<"\n";
     ofile.close();
-    return cls_cxx_write(hctx, 0, write_bl.length(), &write_bl);
+
+    return cls_cxx_write(hctx, 0,write_size, &write_bl);
 }
+
+/**
+ * Set the snapid map of objects. The object must already exist.
+ *
+ * Input:
+ * @param id the id of the image, as an alpha-numeric string
+ *
+ * Output:
+ * @returns 0 on success, -EEXIST if the atomic create fails,
+ *          negative error code on other error
+ */
+ int get_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+{
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
+    if(!ofile.is_open()){
+        std::cout<<"open file error!";
+    }
+
+    uint64_t object_count;
+    string image_id;
+    try {
+        auto iter = in->cbegin();
+        decode(image_id,iter);
+        decode(object_count,iter);
+    } catch (const buffer::error &err) {
+        return -EINVAL;
+    }
+
+    CLS_LOG(20, "get_object_map_snapid successed!");
+
+
+// get default image id as object map snapid
+    bufferlist image_size;
+    bufferlist temp_bpl;
+    std::string image_id_temp;
+    int r;
+    uint64_t i;
+    int out_length=0;
+    encode(image_id,image_size);
+    int size= image_size.length();
+    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| image_id size:"<< sizeof(image_id)<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| image_id size:"<<size<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| image object_count:"<<object_count<<"\n";
+    for ( i=0;i<object_count;i++){
+        r=cls_cxx_read(hctx,i*size,size,&temp_bpl);
+//        ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| i=:"<<i<<" r=:"<<r<<"\n";
+        if (r < 0) {
+            CLS_ERR("get_id: could not read id: %s", cpp_strerror(r).c_str());
+            return r;
+        }
+
+        try {
+            auto iter = temp_bpl.cbegin();
+            decode(image_id_temp,iter);
+//            ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| decoded image_id："<<image_id_temp<<"\n";
+//            out->append((char *)&iter, sizeof(iter));
+        } catch (const buffer::error &err) {
+            return -EINVAL;
+        }
+        encode(image_id_temp,*out);
+        out_length=out->length();
+//        ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| image_id_temp："<<image_id_temp<<"\n";
+//        ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| blp_out length："<<out_length<<"\n";
+    }
+//    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| send to (char*)&iter to out\n";
+    ofile.close();
+
+    return 0;
+}
+
+
+
 
 /**
  * Update the access timestamp of an image
@@ -8176,6 +8255,7 @@ CLS_INIT(rbd)
   cls_method_handle_t h_get_id;
   cls_method_handle_t h_set_id;
   cls_method_handle_t h_set_object_map_snapid;
+  cls_method_handle_t h_get_object_map_snapid;
   cls_method_handle_t h_set_modify_timestamp;
   cls_method_handle_t h_set_access_timestamp;
   cls_method_handle_t h_dir_get_id;
@@ -8443,7 +8523,9 @@ CLS_INIT(rbd)
   cls_register_cxx_method(h_class,"set_object_map_snapid",
                           CLS_METHOD_RD | CLS_METHOD_WR,
                           set_object_map_snapid,&h_set_object_map_snapid);
-
+  cls_register_cxx_method(h_class,"get_object_map_snapid",
+                            CLS_METHOD_RD,
+                            get_object_map_snapid,&h_get_object_map_snapid);
 
   /* methods for the rbd_directory object */
   cls_register_cxx_method(h_class, "dir_get_id",

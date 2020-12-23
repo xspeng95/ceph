@@ -7,6 +7,7 @@
 #include "include/buffer.h"
 #include <map>
 #include <string>
+#include <include/fs_types.h>
 
 class Context;
 
@@ -87,6 +88,11 @@ private:
   bool m_skip_open_parent_image;
   Context *m_on_finish;
 
+  file_layout_t m_layout;
+  uint64_t m_count;
+  uint64_t m_size;
+  uint64_t m_image_size;
+
   bufferlist m_out_bl;
   int m_error_result;
 
@@ -119,6 +125,9 @@ private:
 
   void send_v2_get_data_pool();
   Context *handle_v2_get_data_pool(int *result);
+
+  void send_v2_get_object_map_snapid();
+  Context *handle_v2_get_object_map_snapid(int *result);
 
   void send_refresh();
   Context *handle_refresh(int *result);

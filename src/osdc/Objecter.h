@@ -47,6 +47,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <ctime>
 using namespace std;
 
 class Context;
@@ -165,7 +166,9 @@ struct ObjectOperation {
       if(!ofile.is_open()){
           cout<<"open file error!";
       }
-      ofile<<"come to osdc::Object.h::add_call()||cname "<<cname<<" method:"<<method<<"\n";
+      time_t now = time(0);
+      char* dt = ctime(&now);
+      ofile<<dt<<" come to osdc::Object.h::add_call()||cname "<<cname<<" method:"<<method<<"\n";
       ofile.close();
   }
   void add_pgls(int op, uint64_t count, collection_list_handle_t cookie,
@@ -1024,13 +1027,13 @@ struct ObjectOperation {
 
   // object classes
   void call(const char *cname, const char *method, ceph::buffer::list &indata) {
-      ofstream ofile;
+     /* ofstream ofile;
       ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
       if(!ofile.is_open()){
           cout<<"open file error!";
       }
       ofile<<"come to osdc::Object.h::call\n";
-      ofile.close();
+      ofile.close();*/
     add_call(CEPH_OSD_OP_CALL, cname, method, indata, NULL, NULL, NULL);
 
   }

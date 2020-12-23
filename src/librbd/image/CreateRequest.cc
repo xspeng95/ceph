@@ -19,6 +19,7 @@
 #include "librbd/mirror/EnableRequest.h"
 #include "journal/Journaler.h"
 
+#include "include/cpp-bplustree/BpTree.hpp"
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -583,6 +584,7 @@ void CreateRequest<I>::add_object_map_snapid(){
     ofile<<"come to librbd::image::CreateRequest.cc::add_object_map_snapid()(cls_client)\n";
 
     cls_client::set_object_map_snapid(&op, Striper::get_num_objects(m_layout, m_size), m_image_id);
+
     ofile<<"come to librbd::image::CreateRequest.cc::set_object_map_snapid()(cls_client)\n";
     using klass = CreateRequest<I>;
     librados::AioCompletion *comp =
