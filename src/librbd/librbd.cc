@@ -2198,6 +2198,13 @@ namespace librbd {
 
   int Image::snap_create(const char *snap_name)
   {
+      ofstream ofile;
+      ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
+      if(!ofile.is_open()){
+          std::cout<<"open file error!";
+      }
+      ofile<<"come to librbd::librbd.cc::snap_create()\n";
+      ofile.close();
     ImageCtx *ictx = (ImageCtx *)ctx;
     tracepoint(librbd, snap_create_enter, ictx, ictx->name.c_str(), ictx->snap_name.c_str(), ictx->read_only, snap_name);
     int r = ictx->operations->snap_create(cls::rbd::UserSnapshotNamespace(),

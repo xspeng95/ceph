@@ -560,15 +560,16 @@ void CreateRequest<I>::handle_object_map_resize(int r) {
     remove_header_object();
     return;
   }
-    ofstream ofile;
-    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
-    if(!ofile.is_open()){
-        cout<<"open file error!";
-    }
-    ofile<<"come to librbd::image::CreateRequest.cc::handle_object_map_resize()(cls_client)\n";
-    ofile.close();
+  ofstream ofile;
+  ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+  if(!ofile.is_open()){
+      cout<<"open file error!";
+  }
+  ofile<<"come to librbd::image::CreateRequest.cc::handle_object_map_resize()(cls_client)\n";
+  ofile.close();
 
-  add_object_map_snapid();
+//  fetch_mirror_mode();
+    add_object_map_snapid();
 }
 template<typename I>
 void CreateRequest<I>::add_object_map_snapid(){

@@ -82,7 +82,7 @@ protected:
 
 private:
   cls::rbd::SnapshotNamespace m_snap_namespace;
-  std::string m_snap_name;
+  std::string m_snap_name,m_id_obj_map_snapid_name;
   bool m_skip_object_map;
 
   int m_ret_val;
@@ -111,6 +111,10 @@ private:
 
   Context *send_create_image_state();
   Context *handle_create_image_state(int *result);
+
+  void send_create_image_object_map_snapid();
+  Context *handle_create_image_object_map_snapid(int *result);
+
 
   void send_release_snap_id();
   Context *handle_release_snap_id(int *result);

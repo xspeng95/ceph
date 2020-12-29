@@ -41,6 +41,9 @@
 #include <boost/bind.hpp>
 #include <boost/scope_exit.hpp>
 
+#include <fstream>
+#include <iostream>
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::Operations: "
@@ -751,6 +754,14 @@ void Operations<I>::execute_snap_create(const cls::rbd::SnapshotNamespace &snap_
   ceph_assert(m_image_ctx.exclusive_lock == nullptr ||
               m_image_ctx.exclusive_lock->is_lock_owner());
 
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
+    if(!ofile.is_open()){
+        std::cout<<"open file error!";
+    }
+    ofile<<"come to librbd::Operations.cc::execute_snap_create()\n";
+    ofile.close();
+
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 5) << this << " " << __func__ << ": snap_name=" << snap_name
                 << dendl;
@@ -773,6 +784,7 @@ void Operations<I>::execute_snap_create(const cls::rbd::SnapshotNamespace &snap_
       m_image_ctx, new C_NotifyUpdate<I>(m_image_ctx, on_finish),
       snap_namespace, snap_name, journal_op_tid, skip_object_map);
   req->send();
+
 }
 
 template <typename I>

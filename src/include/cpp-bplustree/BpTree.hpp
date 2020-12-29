@@ -376,6 +376,13 @@ public:
         std::cout<<"do not find the key!"<<"\n";
         return NULL;
     }
+    Node* getRootNode(){
+        Node* t;
+
+        t=this->head;
+
+        return t;
+    }
     ~BpTree()
     {
         if(this->head){

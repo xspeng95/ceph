@@ -604,7 +604,8 @@ Context *OpenRequest<I>::handle_v2_get_data_pool(int *result) {
   }
 
   m_image_ctx->init_layout(data_pool_id);
-    send_v2_get_object_map_snapid();
+  send_v2_get_object_map_snapid();
+//    send_refresh();
   return nullptr;
 }
 template <typename I>
@@ -659,16 +660,16 @@ Context *OpenRequest<I>::handle_v2_get_object_map_snapid(int *result) {
         *result=cls_client::get_object_map_snapid_finish(&it,&m_image_ctx->object_map_snapid_bpl,m_count);
         string object_image_id;
         auto iter=m_image_ctx->object_map_snapid_bpl.cbegin();
-        for(uint64_t i=0;i<m_count;i++){
-            try {
-                decode(object_image_id,iter);
-                m_image_ctx->bptree.insert(i,object_image_id);
-            } catch (const buffer::error &err) {
-                return nullptr;
-            }
-        }
+//        for(uint64_t i=0;i<m_count;i++){
+//            try {
+//                decode(object_image_id,iter);
+//                m_image_ctx->bptree.insert(i,object_image_id);
+//            } catch (const buffer::error &err) {
+//                return nullptr;
+//            }
+//        }
     }
-    m_image_ctx->bptree.printKeys();
+//    m_image_ctx->bptree.printKeys();
     if (*result < 0) {
         lderr(cct) << "failed to get object map snapid : " << cpp_strerror(*result)
         << dendl;
@@ -885,7 +886,7 @@ Context *OpenRequest<I>::handle_set_snap(int *result) {
     send_close_image(*result);
     return nullptr;
   }
-  send_v2_get_object_map_snapid();
+//  send_v2_get_object_map_snapid();
   return nullptr;
 //  return finalize(*result);
 }

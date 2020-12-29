@@ -13,6 +13,10 @@
 #include <boost/program_options.hpp>
 #include <boost/bind.hpp>
 
+#include "include/cpp-bplustree/BpTree.hpp"
+#include <fstream>
+#include <iostream>
+
 namespace rbd {
 namespace action {
 namespace snap {
@@ -234,6 +238,13 @@ int do_list_snaps(librbd::Image& image, Formatter *f, bool all_snaps, librados::
 
 int do_add_snap(librbd::Image& image, const char *snapname)
 {
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
+    if(!ofile.is_open()){
+        std::cout<<"open file error!";
+    }
+    ofile<<"come to tools::rbd::action::Snap.cc::do_add_snap()\n";
+    ofile.close();
   int r = image.snap_create(snapname);
   if (r < 0)
     return r;

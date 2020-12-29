@@ -12,6 +12,11 @@
 #include "librbd/io/ImageRequestWQ.h"
 #include "librbd/mirror/snapshot/SetImageStateRequest.h"
 
+#include "include/cpp-bplustree/BpTree.hpp"
+#include <fstream>
+#include <iostream>
+#include "include/cpp-bplustree/BpTree.hpp"
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::SnapshotCreateRequest: "
@@ -33,6 +38,7 @@ SnapshotCreateRequest<I>::SnapshotCreateRequest(I &image_ctx,
   : Request<I>(image_ctx, on_finish, journal_op_tid),
     m_snap_namespace(snap_namespace), m_snap_name(snap_name),
     m_skip_object_map(skip_object_map), m_ret_val(0), m_snap_id(CEPH_NOSNAP) {
+//    m_id_obj_map_snapid_name= util::id_obj_map_snapid_name(m_snap_id);
 }
 
 template <typename I>
@@ -209,7 +215,13 @@ Context *SnapshotCreateRequest<I>::handle_create_snap(int *result) {
     send_release_snap_id();
     return nullptr;
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::operation::SnapshotCreateRequest.cc::handle_create_snap()\n";
+    ofile.close();
   return send_create_object_map();
 }
 
@@ -249,7 +261,13 @@ Context *SnapshotCreateRequest<I>::handle_create_object_map(int *result) {
     image_ctx.io_work_queue->unblock_writes();
     return this->create_context_finisher(*result);
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::operation::SnapshotCreateRequest.cc::handle_create_object_map()\n";
+    ofile.close();
   return send_create_image_state();
 }
 
@@ -288,9 +306,81 @@ Context *SnapshotCreateRequest<I>::handle_create_image_state(int *result) {
                << cpp_strerror(*result) << dendl;
     return this->create_context_finisher(*result);
   }
-
-  return this->create_context_finisher(0);
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::operation::SnapshotCreateRequest.cc::handle_create_image_state()\n";
+    ofile.close();
+//    send_create_image_object_map_snapid();
+//    return nullptr;
+    return this->create_context_finisher(0);
 }
+
+template <typename I>
+void SnapshotCreateRequest<I>::send_create_image_object_map_snapid() {
+    I &image_ctx=this->m_image_ctx;
+    CephContext *cct=image_ctx.cct;
+    ldout(cct, 5) << this << " " << __func__ << dendl;
+
+    Node* rootNode= image_ctx.bptree.getRootNode();
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::operation::SnapshotCreateRequest.cc::send_create_image_object_map_snapid()\n";
+
+//    int key=10;
+//    string value;
+//    while (!rootNode->isLeaf){ //find the proper location
+//        int flag = 0;
+//        for (int i=0;i<rootNode->Keys.size();++i){
+//            if(rootNode->Keys[i]>=key){
+//                rootNode = ((In_Node*)rootNode)->Children[i];
+//                flag = 1;
+//                break;
+//            }
+//        }
+//        if(!flag){
+//            rootNode = ((In_Node*)rootNode)->Children[rootNode->Keys.size()];
+//        }
+//    }
+//    for(int i=0;i<rootNode->Keys.size();++i){
+//        if(rootNode->Keys[i]==key){
+//            ofile<<"leaf node is:"<<((LeafNode*)rootNode)->Value[i]<<"\n";
+//        }
+//    }
+    librados::ObjectWriteOperation op;
+    op.create(true);
+
+    using klass=SnapshotCreateRequest<I>;
+//    cls_client::set_snap_object_map_snapid(&op,);
+//    librados::AioCompletion *comp=
+//            create_rados_callback<klass,&klass::handle_create_image_object_map_snapid>(this);
+//    int r=image_ctx.md_ctx.aio_operate(m_snap_id,);
+
+    ofile.close();
+
+}
+template <typename I>
+Context *SnapshotCreateRequest<I>::handle_create_image_object_map_snapid(int *result) {
+    I &image_ctx=this->m_image_ctx;
+    CephContext *cct=image_ctx.cct;
+    ldout(cct, 5) << this << " " << __func__ << ": r=" << *result << dendl;
+
+    update_snap_context();
+    image_ctx.io_work_queue->unblock_writes();
+    if (*result < 0) {
+        lderr(cct) << this << " " << __func__ << ": failed to snapshot object map: "
+                   << cpp_strerror(*result) << dendl;
+        return this->create_context_finisher(*result);
+    }
+
+    return this->create_context_finisher(0);
+}
+
 
 template <typename I>
 void SnapshotCreateRequest<I>::send_release_snap_id() {
@@ -305,6 +395,7 @@ void SnapshotCreateRequest<I>::send_release_snap_id() {
     &SnapshotCreateRequest<I>::handle_release_snap_id>(this);
   image_ctx.data_ctx.aio_selfmanaged_snap_remove(m_snap_id, rados_completion);
   rados_completion->release();
+
 }
 
 template <typename I>
