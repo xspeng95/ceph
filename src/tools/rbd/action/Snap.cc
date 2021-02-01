@@ -448,6 +448,7 @@ int execute_create(const po::variables_map &vm,
   librados::Rados rados;
   librados::IoCtx io_ctx;
   librbd::Image image;
+  //每次创建快照都会初始化和打开head image
   r = utils::init_and_open_image(pool_name, namespace_name, image_name, "", "",
                                  false, &rados, &io_ctx, &image);
   if (r < 0) {
@@ -929,7 +930,7 @@ int execute_rename(const po::variables_map &vm,
   }
   return 0;
 }
-
+//解析命令行然后选择执行的函数
 Shell::Action action_list(
   {"snap", "list"}, {"snap", "ls"}, "Dump list of image snapshots.", "",
   &get_list_arguments, &execute_list);

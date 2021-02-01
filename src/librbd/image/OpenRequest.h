@@ -8,7 +8,7 @@
 #include <map>
 #include <string>
 #include <include/fs_types.h>
-
+#include "include/cpp-bplustree/BpTree.hpp"
 class Context;
 
 namespace librbd {
@@ -92,9 +92,12 @@ private:
   uint64_t m_count;
   uint64_t m_size;
   uint64_t m_image_size;
+  snapid_t m_snap_id;
 
   bufferlist m_out_bl;
+  bufferlist object_map_imageid_bl;
   int m_error_result;
+
 
   void send_v1_detect_header();
   Context *handle_v1_detect_header(int *result);
@@ -126,8 +129,11 @@ private:
   void send_v2_get_data_pool();
   Context *handle_v2_get_data_pool(int *result);
 
-  void send_v2_get_object_map_snapid();
-  Context *handle_v2_get_object_map_snapid(int *result);
+  void send_v2_get_image_object_map_snapid();
+  Context *handle_v2_get_image_object_map_snapid(int *result);
+
+  void send_v2_get_snap_object_map_snapid();
+  Context *handle_v2_get_snap_object_map_snapid(int *result);
 
   void send_refresh();
   Context *handle_refresh(int *result);

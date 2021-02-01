@@ -2844,7 +2844,7 @@ int set_id(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
 }
 
 /**
- * Set the snapid map of objects. The object must already exist.
+ * Set the imageid map of objects. The object must already exist.
  *
  * Input:
  * @param id the id of the image, as an alpha-numeric string
@@ -2853,7 +2853,7 @@ int set_id(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
  * @returns 0 on success, -EEXIST if the atomic create fails,
  *          negative error code on other error
  */
-int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+int set_object_map_imageid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
 {
     int r = check_exists(hctx);
     if (r < 0)
@@ -2881,14 +2881,14 @@ int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist 
     if (size != 0)
         return -EEXIST;
 
-    CLS_LOG(20, "set_object_map_snapid successed!");
+    CLS_LOG(20, "set_object_map_imageid successed!");
     ofstream ofile;
     ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
     if(!ofile.is_open()){
         cout<<"open file error!";
     }
-    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()\n";
-    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| original image_id :"<<image_id<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_imageid()\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_imageid()|| original image_id :"<<image_id<<"\n";
 
 // set default image id as object map snapid
     bufferlist write_bl;
@@ -2897,16 +2897,16 @@ int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist 
     }
     auto write_size=write_bl.length();
 
-    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image_id size:"<<write_size/object_count<<"\n";
-    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image object_count:"<<object_count<<"\n";
-    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image write_size:"<<write_size<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_imageid()|| image_id size:"<<write_size/object_count<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_imageid()|| image object_count:"<<object_count<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_imageid()|| image write_size:"<<write_size<<"\n";
     ofile.close();
 
     return cls_cxx_write(hctx, 0,write_size, &write_bl);
 }
 
 /**
- * Set the snapid map of objects. The object must already exist.
+ * Get the imageid map of objects. The object must already exist.
  *
  * Input:
  * @param id the id of the image, as an alpha-numeric string
@@ -2915,7 +2915,7 @@ int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist 
  * @returns 0 on success, -EEXIST if the atomic create fails,
  *          negative error code on other error
  */
- int get_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+ int get_object_map_imageid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
 {
 
     ofstream ofile;
@@ -2971,6 +2971,145 @@ int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist 
 //        ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| blp_out length："<<out_length<<"\n";
     }
 //    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| send to (char*)&iter to out\n";
+    ofile.close();
+
+    return 0;
+}
+
+/**
+ * Set the snapid map of objects. The object must already exist.
+ *
+ * Input:
+ * @param id the id of the image, as an alpha-numeric string
+ *
+ * Output:
+ * @returns 0 on success, -EEXIST if the atomic create fails,
+ *          negative error code on other error
+ */
+int set_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+{
+    int r = check_exists(hctx);
+    if (r < 0)
+        return r;
+
+    snapid_t current_snap_id;
+    snapid_t prev_snap_id;
+    uint64_t object_count;
+    try {
+        auto iter = in->cbegin();
+        decode(prev_snap_id, iter);
+        decode(current_snap_id, iter);
+        decode(object_count,iter);
+    } catch (const buffer::error &err) {
+        return -EINVAL;
+    }
+
+    uint64_t size;
+    r = cls_cxx_stat(hctx, &size, NULL);
+    if (r < 0)
+        return r;
+    if (size != 0)
+        return -EEXIST;
+
+    CLS_LOG(20, "set_object_map_snapid successed!");
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| current snap_id :"<<current_snap_id<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| prev snap_id :"<<prev_snap_id<<"\n";
+// 写入第一个位置的是当前快照的前一个快照id,
+// 后一个是当前快照id
+// 后面的才是数据块的快照id,默认全部都是0.一共有object_count+2个单元.
+    bufferlist write_bl;
+    encode(prev_snap_id,write_bl);
+    encode(current_snap_id,write_bl);
+    snapid_t orig_snap_id=0;
+    for (uint64_t i=0;i<object_count;i++){
+        encode(orig_snap_id, write_bl);
+    }
+    auto write_size=write_bl.length();
+
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| snap_id size:"<<write_size/object_count<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image object_count:"<<object_count<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| image write_size:"<<write_size<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::set_object_map_snapid()|| oid:"<<hctx<<"\n";
+    ofile.close();
+
+    return cls_cxx_write(hctx, 0,write_size, &write_bl);
+//    return cls_cxx_write_full(hctx,&write_bl);
+}
+
+/**
+ * Get the snapid map of objects. The object must already exist.
+ *
+ * Input:
+ * @param id the id of the snap, as an alpha-numeric string
+ *
+ * Output:
+ * @returns 0 on success, -EEXIST if the atomic create fails,
+ *          negative error code on other error
+ */
+int get_object_map_snapid(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+{
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
+    if(!ofile.is_open()){
+        std::cout<<"open file error!";
+    }
+
+    uint64_t object_count;
+    snapid_t snap_id;
+    try {
+        auto iter = in->cbegin();
+        decode(snap_id,iter);
+        decode(object_count,iter);
+    } catch (const buffer::error &err) {
+        return -EINVAL;
+    }
+
+    CLS_LOG(20, "get_object_map_snapid successed!");
+
+
+// get default snap id as object map snapid
+    bufferlist snap_size;
+    bufferlist temp_bpl;
+    snapid_t snap_id_temp;
+    int r;
+    uint64_t i;
+    int out_length=0;
+    encode(snap_id,snap_size);
+    int size= snap_size.length();
+    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| sizeof(snap_id):"<< sizeof(snap_id)<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| size:"<<size<<"\n";
+    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| snap object_count:"<<object_count<<"\n";
+    //读取object_count+2个单元,第一个是当前的快照的前一个快照id,第二个是当前快照id,后面才是数据块的快照id.
+    object_count=object_count+2;
+    for ( i=0;i<object_count;i++){
+        r=cls_cxx_read(hctx,i*size,size,&temp_bpl);
+//        ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| i=:"<<i<<" r=:"<<r<<"\n";
+        if (r < 0) {
+            CLS_ERR("get_id: could not read id: %s", cpp_strerror(r).c_str());
+            return r;
+        }
+
+        try {
+            auto iter = temp_bpl.cbegin();
+            decode(snap_id_temp,iter);
+//            ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| decoded snap_id："<<snap_id_temp<<"\n";
+//            out->append((char *)&iter, sizeof(iter));
+        } catch (const buffer::error &err) {
+            return -EINVAL;
+        }
+        encode(snap_id_temp,*out);
+        out_length=out->length();
+//        ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| snap_id_temp："<<snap_id_temp<<"\n";
+//        ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| blp_out length："<<out_length<<"\n";
+    }
+    ofile<<"come to cls::cls_rbd.cc::get_object_map_snapid()|| after loop\n";
     ofile.close();
 
     return 0;
@@ -8254,6 +8393,8 @@ CLS_INIT(rbd)
   cls_method_handle_t h_get_all_features;
   cls_method_handle_t h_get_id;
   cls_method_handle_t h_set_id;
+  cls_method_handle_t h_set_object_map_imageid;
+  cls_method_handle_t h_get_object_map_imageid;
   cls_method_handle_t h_set_object_map_snapid;
   cls_method_handle_t h_get_object_map_snapid;
   cls_method_handle_t h_set_modify_timestamp;
@@ -8519,7 +8660,15 @@ CLS_INIT(rbd)
 			  CLS_METHOD_RD | CLS_METHOD_WR,
 			  set_id, &h_set_id);
 
-  /* methods for the object_map_snapid.$image_id objects */
+  /* methods for the object_map_imageid.$image_id objects */
+  cls_register_cxx_method(h_class,"set_object_map_imageid",
+                 CLS_METHOD_RD | CLS_METHOD_WR,
+              set_object_map_imageid,&h_set_object_map_imageid);
+  cls_register_cxx_method(h_class,"get_object_map_imageid",
+                            CLS_METHOD_RD,
+                            get_object_map_imageid,&h_get_object_map_imageid);
+
+  /* methods for the object_map_snapid.$snap_id objects */
   cls_register_cxx_method(h_class,"set_object_map_snapid",
                           CLS_METHOD_RD | CLS_METHOD_WR,
                           set_object_map_snapid,&h_set_object_map_snapid);

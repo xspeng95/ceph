@@ -649,12 +649,19 @@ void sparsify(librados::ObjectWriteOperation *op, size_t sparse_size,
 int sparsify(librados::IoCtx *ioctx, const std::string &oid, size_t sparse_size,
              bool remove_empty);
 
-void set_object_map_snapid(librados::ObjectWriteOperation *op,uint64_t object_count, const std::string &image_id );
-int set_object_map_snapid(librados::IoCtx *ioctx, uint64_t object_count, const std::string &image_id );
+void set_object_map_imageid(librados::ObjectWriteOperation *op,uint64_t object_count, const std::string &image_id );
+int set_object_map_imageid(librados::IoCtx *ioctx, uint64_t object_count, const std::string &image_id,const std::string &oid);
 
-void get_object_map_snapid_start(librados::ObjectReadOperation *op,uint64_t object_count,const std::string &image_id);
+void set_object_map_snapid(librados::ObjectWriteOperation *op,uint64_t object_count, const snapid_t &current_snap_id,const snapid_t &prev_snap_id );
+int set_object_map_snapid(librados::IoCtx *ioctx, uint64_t object_count, const snapid_t &snap_id,const std::string &oid,const snapid_t &prev_snap_id);
+
+void get_object_map_imageid_start(librados::ObjectReadOperation *op,uint64_t object_count,const std::string &image_id);
+int get_object_map_imageid_finish(bufferlist::const_iterator *it, bufferlist *object_map_out,uint64_t object_count);
+int get_object_map_imageid(librados::IoCtx *ioctx, const std::string &oid,uint64_t object_count,const std::string &image_id,bufferlist *object_map_out);
+
+void get_object_map_snapid_start(librados::ObjectReadOperation *op,uint64_t object_count,const snapid_t &snap_id);
 int get_object_map_snapid_finish(bufferlist::const_iterator *it, bufferlist *object_map_out,uint64_t object_count);
-int get_object_map_snapid(librados::IoCtx *ioctx, const std::string &oid,uint64_t object_count,bufferlist &object_map_out);
+int get_object_map_snapid(librados::IoCtx *ioctx, const std::string &oid,uint64_t object_count,const snapid_t &snap_id,bufferlist *object_map_out);
 
 
 } // namespace cls_client

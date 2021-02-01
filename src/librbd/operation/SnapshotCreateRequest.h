@@ -112,6 +112,8 @@ private:
   Context *send_create_image_state();
   Context *handle_create_image_state(int *result);
 
+  static std::string object_map_name(const std::string &image_id,
+                                       uint64_t snap_id);
   void send_create_image_object_map_snapid();
   Context *handle_create_image_object_map_snapid(int *result);
 

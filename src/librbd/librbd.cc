@@ -463,6 +463,15 @@ namespace librbd {
 		const char *snap_name)
   {
     ImageCtx *ictx = new ImageCtx(name, "", snap_name, io_ctx, false);
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::librbd.cc()::RBD::open()||ictx->tree_init_once:"<<ictx->tree_init_once<<"\n";
+    ofile.close();
+
     TracepointProvider::initialize<tracepoint_traits>(get_cct(io_ctx));
     tracepoint(librbd, open_image_enter, ictx, ictx->name.c_str(), ictx->id.c_str(), ictx->snap_name.c_str(), ictx->read_only);
 
@@ -470,13 +479,11 @@ namespace librbd {
       reinterpret_cast<ImageCtx*>(image.ctx)->state->close();
       image.ctx = NULL;
     }
-
     int r = ictx->state->open(0);
     if (r < 0) {
       tracepoint(librbd, open_image_exit, r);
       return r;
     }
-
     image.ctx = (image_ctx_t) ictx;
     tracepoint(librbd, open_image_exit, 0);
     return 0;
@@ -2204,8 +2211,10 @@ namespace librbd {
           std::cout<<"open file error!";
       }
       ofile<<"come to librbd::librbd.cc::snap_create()\n";
-      ofile.close();
+
     ImageCtx *ictx = (ImageCtx *)ctx;
+    ofile<<"come to librbd::librbd.cc::snap_create()||ictx.tree_init_once:"<<ictx->tree_init_once<<"\n";
+    ofile.close();
     tracepoint(librbd, snap_create_enter, ictx, ictx->name.c_str(), ictx->snap_name.c_str(), ictx->read_only, snap_name);
     int r = ictx->operations->snap_create(cls::rbd::UserSnapshotNamespace(),
 					  snap_name);

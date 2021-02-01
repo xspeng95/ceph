@@ -151,8 +151,17 @@ namespace librbd {
     std::string object_prefix;
     char *format_string;
     std::string header_oid;
+
+    //自己添加的数据
     bufferlist object_map_snapid_bpl;
-    BpTree bptree;
+    bufferlist object_map_imageid_bpl;
+    BpTree head_image_bptree;
+    std::map<snapid_t,BpTree> snap_tree_set;
+    int object_count;
+    static bool tree_init_once;
+    int snaptree_is_built;
+    int imagetree_is_built;
+
     std::string id; // only used for new-format images
     ParentImageInfo parent_md;
     ImageCtx *parent;
@@ -349,6 +358,8 @@ namespace librbd {
                                          ContextWQ **op_work_queue);
     static void get_timer_instance(CephContext *cct, SafeTimer **timer,
                                    ceph::mutex **timer_lock);
+
+    static void set_tree_init_once();
   };
 }
 

@@ -141,6 +141,7 @@ private:
 
   bufferlist m_out_bl;
 
+
   bool m_legacy_parent = false;
   LegacySnapshot m_legacy_snapshot = LEGACY_SNAPSHOT_DISABLED;
 
@@ -210,6 +211,12 @@ private:
 
   void send_v2_get_snapshots();
   Context *handle_v2_get_snapshots(int *result);
+
+  void send_v2_get_snap_object_map_snapid();
+  Context *handle_v2_get_snap_object_map_snapid(int *result);
+
+  std::string object_map_name(const std::string &image_id,
+                                       uint64_t snap_id);
 
   void send_v2_get_snapshots_legacy();
   Context *handle_v2_get_snapshots_legacy(int *result);

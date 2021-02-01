@@ -22,6 +22,7 @@
 #include "librbd/io/ImageRequestWQ.h"
 #include "librbd/journal/Policy.h"
 
+#include "include/cpp-bplustree/BpTree.hpp"
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -467,7 +468,13 @@ void RefreshRequest<I>::send_v2_get_parent() {
   } else {
     cls_client::get_parent_start(&op, CEPH_NOSNAP);
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_parent()\n";
+    ofile.close();
   auto aio_comp = create_rados_callback<
     RefreshRequest<I>, &RefreshRequest<I>::handle_v2_get_parent>(this);
   m_out_bl.clear();
@@ -528,7 +535,13 @@ template <typename I>
 void RefreshRequest<I>::send_v2_get_metadata() {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 10) << this << " " << __func__ << dendl;
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_metadata()\n";
+    ofile.close();
   auto ctx = create_context_callback<
     RefreshRequest<I>, &RefreshRequest<I>::handle_v2_get_metadata>(this);
   auto req = GetMetadataRequest<I>::create(
@@ -557,7 +570,13 @@ template <typename I>
 void RefreshRequest<I>::send_v2_get_pool_metadata() {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 10) << this << " " << __func__ << dendl;
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_pool_metadata()\n";
+    ofile.close();
   auto ctx = create_context_callback<
     RefreshRequest<I>, &RefreshRequest<I>::handle_v2_get_pool_metadata>(this);
   auto req = GetMetadataRequest<I>::create(
@@ -590,7 +609,13 @@ void RefreshRequest<I>::send_v2_get_op_features() {
     send_v2_get_group();
     return;
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_op_features()\n";
+    ofile.close();
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 10) << this << " " << __func__ << dendl;
 
@@ -631,7 +656,13 @@ template <typename I>
 void RefreshRequest<I>::send_v2_get_group() {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 10) << this << " " << __func__ << dendl;
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_group()\n";
+    ofile.close();
   librados::ObjectReadOperation op;
   cls_client::image_group_get_start(&op);
 
@@ -660,7 +691,13 @@ Context *RefreshRequest<I>::handle_v2_get_group(int *result) {
                << dendl;
     return m_on_finish;
   }
-
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_group()\n";
+    ofile.close();
   send_v2_get_snapshots();
   return nullptr;
 }
@@ -671,12 +708,20 @@ void RefreshRequest<I>::send_v2_get_snapshots() {
   m_snap_flags.resize(m_snapc.snaps.size());
   m_snap_parents.resize(m_snapc.snaps.size());
   m_snap_protection.resize(m_snapc.snaps.size());
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snapshots()\n";
 
   if (m_snapc.snaps.empty()) {
+      ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snapshots()|| snap is empty\n";
     send_v2_refresh_parent();
     return;
   }
 
+  ofile.close();
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 10) << this << " " << __func__ << dendl;
 
@@ -711,6 +756,7 @@ void RefreshRequest<I>::send_v2_get_snapshots() {
                                          &m_out_bl);
   ceph_assert(r == 0);
   comp->release();
+
 }
 
 template <typename I>
@@ -800,10 +846,179 @@ Context *RefreshRequest<I>::handle_v2_get_snapshots(int *result) {
     return m_on_finish;
   }
 
-  send_v2_refresh_parent();
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snapshots()\n";
+
+    send_v2_get_snap_object_map_snapid();
+
+    ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snapshots()|| after get snap id\n";
+    ofile.close();
   return nullptr;
 }
+//设置每个映射的数据块的名称
+template <typename I>
+std::string RefreshRequest<I>::object_map_name(const std::string &image_id,
+            uint64_t snap_id) {
+    std::string oid(RBD_OBJECT_MAP_SNAPID_PREFIX + image_id);
+    if (snap_id != CEPH_NOSNAP) {
+        std::stringstream snap_suffix;
+        snap_suffix << "." << std::setfill('0') << std::setw(16) << std::hex
+             << snap_id;
+        oid += snap_suffix.str();
+    }
+    return oid;
+}
+//处理snap image的快照树构建
+template <typename I>
+void RefreshRequest<I>::send_v2_get_snap_object_map_snapid(){
+    CephContext *cct=m_image_ctx.cct;
+    ldout(cct,10)<<this<<" "<<__func__<<dendl;
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()\n";
+    if (m_snapc.snaps.empty()) {
+        ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()|| snap is empty\n";
+        send_v2_refresh_parent();
+        return;
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()||snaps.size:"<<m_snapc.snaps.size()<<"\n";
+    for(unsigned int i=0;i<m_snapc.snaps.size();++i){
+        ofile<<"snap_id:"<<m_snapc.snaps[i]<<"\n";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()|| after iterate the snaps\n";
 
+
+    for(auto snap_id:m_snapc.snaps){
+        ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()|| snap_id:"<<snap_id<<"\n";
+        librados::ObjectReadOperation op;
+        //cls_client就是让op做什么事--read
+        cls_client::get_object_map_snapid_start(&op,m_image_ctx.object_count,snap_id);
+        std::string oid(RefreshRequest<I>::object_map_name(m_image_ctx.id, snap_id));
+        using klass=RefreshRequest<I>;
+        librados::AioCompletion *comp = create_rados_callback<
+                klass, &klass::handle_v2_get_snap_object_map_snapid>(this);
+        m_out_bl.clear();
+        int r = m_image_ctx.md_ctx.aio_operate(oid, comp, &op,&m_out_bl);
+        ceph_assert(r == 0);
+        comp->release();
+    }
+//        snapid_t snap_id=m_snapc.snaps[0];
+//        ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()|| snap_id:"<<snap_id<<"\n";
+//        librados::ObjectReadOperation op;
+//        //cls_client就是让op做什么事--read
+//        cls_client::get_object_map_snapid_start(&op,m_image_ctx.object_count,snap_id);
+//        std::string oid(RefreshRequest<I>::object_map_name(m_image_ctx.id, snap_id));
+//        using klass=RefreshRequest<I>;
+//        librados::AioCompletion *comp = create_rados_callback<
+//                klass, &klass::handle_v2_get_snap_object_map_snapid>(this);
+//        m_out_bl.clear();
+//        int r = m_image_ctx.md_ctx.aio_operate(oid, comp, &op,&m_out_bl);
+//        ceph_assert(r == 0);
+//        comp->release();
+    ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()||finished\n";
+    ofile.close();
+
+}
+
+
+template <typename I>
+Context* RefreshRequest<I>::handle_v2_get_snap_object_map_snapid(int *result) {
+    CephContext *cct = m_image_ctx.cct;
+    ldout(cct, 20) << __func__ << ": r=" << *result << dendl;
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snap_object_map_snapid()\n";
+    ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snap_object_map_snapid()|| result:"<<*result<<"\n";
+    if (*result == 0) {
+        auto it = m_out_bl.cbegin();
+        //将下面的代码改成数组访问模式，不需要cls_client
+        bufferlist *temp_bpl;
+        *result = cls_client::get_object_map_snapid_finish(&it, temp_bpl,
+                                                           m_image_ctx.object_count);
+        auto iter = temp_bpl->cbegin();
+        snapid_t prev_snap_id;//当前快照的前一个快照id
+        snapid_t current_snap_id;//当前快照自身的快照id
+        snapid_t object_snap_id;//数据块快照id
+        try {
+            decode(prev_snap_id, iter);
+            decode(current_snap_id, iter);
+        } catch (const buffer::error &err) {
+            return nullptr;
+        }
+        //这里需要获取到两棵树，然后根据前一个树来构建下一棵树（有一个bug，如果是第一个快照，他的前面就是head image，没有snap_prev
+        // ,这里需要添加判断(在set的时候需要分开讨论，这里暂定如果是第一个快照，prev则是同样是自己)）
+        ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snap_object_map_snapid()||prev_snap_id:"<<prev_snap_id<<"\n";
+        ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snap_object_map_snapid()||current_snap_id:"<<current_snap_id<<"\n";
+        //相等则为第一个快照,prev则是head image
+        if (prev_snap_id == current_snap_id) {
+            Node *tree_head = m_image_ctx.head_image_bptree.getRootNode();
+            BpTree snap_bptree((In_Node &) (*tree_head));
+            std::ostringstream o;
+            for (int i = 0; i < m_image_ctx.object_count; i++) {
+                try {
+                    decode(object_snap_id, iter);
+                    if (object_snap_id == 0) {
+                        o << object_snap_id;
+                        snap_bptree.insertSnapValue(i, o.str(), (In_Node *) (tree_head));
+                        o.str("");
+                    }
+                } catch (const buffer::error &err) {
+                    return nullptr;
+                }
+            }
+            ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snap_object_map_snapid()|| first snap and print\n";
+            snap_bptree.printValues();
+            m_image_ctx.snap_tree_set.insert(pair<snapid_t, BpTree>(current_snap_id, snap_bptree));
+        } else {//不相等则不是第一个快照,snap_prev是快照,需要从map中获取到bptree然后构建当前快照的bptree,最后添加到map.
+            for (auto it = m_image_ctx.snap_tree_set.begin(); it != m_image_ctx.snap_tree_set.end(); it++) {
+                if (it->first == prev_snap_id) {
+                    Node *tree_head = it->second.getRootNode();
+                    BpTree snap_bptree((In_Node &) (*tree_head));
+                    std::ostringstream o;
+                    for (int i = 0; i < m_image_ctx.object_count; i++) {
+                        try {
+                            decode(object_snap_id, iter);
+                            if (object_snap_id != 0) {
+                                o << object_snap_id;
+                                snap_bptree.insertSnapValue(i, o.str(), (In_Node *) (tree_head));
+                                o.str("");
+                            }
+                        } catch (const buffer::error &err) {
+                            return nullptr;
+                        }
+                    }
+                    ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snap_object_map_snapid()|| not first snap and print\n";
+                    snap_bptree.printValues();
+                    m_image_ctx.snap_tree_set.insert(pair<snapid_t, BpTree>(current_snap_id, snap_bptree));
+                }
+
+            }
+
+        }
+        //判断是否是最后一个快照，如果是则完成refresh后续步骤
+        if(m_snapc.snaps.back()==current_snap_id){
+            send_v2_refresh_parent();
+            return nullptr;
+        }
+    }
+    ofile.close();
+    if (*result < 0) {
+        lderr(cct) << "get snap object map snapid failed: " << cpp_strerror(*result)
+                   << dendl;
+    }
+    return nullptr;
+}
 template <typename I>
 void RefreshRequest<I>::send_v2_refresh_parent() {
   {

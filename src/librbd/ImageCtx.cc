@@ -37,6 +37,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include "include/cpp-bplustree/BpTree.hpp"
+#include <fstream>
+#include <iostream>
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -94,6 +96,8 @@ public:
 
   const string ImageCtx::METADATA_CONF_PREFIX = "conf_";
 
+  bool ImageCtx::tree_init_once=false;
+
   ImageCtx::ImageCtx(const string &image_name, const string &image_id,
 		     const char *snap, IoCtx& p, bool ro)
     : cct((CephContext*)p.cct()),
@@ -127,15 +131,14 @@ public:
       event_socket_completions(32),
       asok_hook(nullptr),
       trace_endpoint("librbd"),
-      bptree(4)
+      snaptree_is_built(0),
+      imagetree_is_built(0),
+      head_image_bptree(3)
   {
     md_ctx.dup(p);
     data_ctx.dup(p);
     if (snap)
       snap_name = snap;
-
-
-
     // FIPS zeroization audit 20191117: this memset is not security related.
     memset(&header, 0, sizeof(header));
 
@@ -202,7 +205,10 @@ public:
       pname += "-";
       pname += snap_name;
     }
-
+//    //在init中增加变量确保后续的tree只构建一次
+//    if(tree_init_once){
+//        imagetree_is_built=1;
+//    }
     trace_endpoint.copy_name(pname);
     perf_start(pname);
 
@@ -507,6 +513,9 @@ public:
   {
     ceph_assert(ceph_mutex_is_wlocked(image_lock));
     snaps.push_back(id);
+
+//    root_node_set.insert(id,);
+
     SnapInfo info(in_snap_name, in_snap_namespace,
 		  in_size, parent, protection_status, flags, timestamp);
     snap_info.insert({id, info});
@@ -935,5 +944,8 @@ public:
     *timer_lock = &safe_timer_singleton->lock;
   }
 
+  void ImageCtx::set_tree_init_once() {
+      tree_init_once=true;
+  }
 
 }

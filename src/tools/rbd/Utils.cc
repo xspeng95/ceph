@@ -18,6 +18,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
+//tianjia
+#include<fstream>
+
 namespace rbd {
 namespace utils {
 
@@ -745,6 +748,15 @@ int open_image(librados::IoCtx &io_ctx, const std::string &image_name,
                bool read_only, librbd::Image *image) {
   int r;
   librbd::RBD rbd;
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to tools::rbd::Utils.cc()::open_image()\n";
+    ofile.close();
+
   if (read_only) {
     r = rbd.open_read_only(io_ctx, *image, image_name.c_str(), NULL);
   } else {
@@ -788,6 +800,13 @@ int init_and_open_image(const std::string &pool_name,
   if (r < 0) {
     return r;
   }
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to tools::rbd::Utils.cc()::init_and_open_image()\n";
+    ofile.close();
 
   if (image_id.empty()) {
     r = open_image(*io_ctx, image_name, read_only, image);

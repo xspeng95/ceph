@@ -159,7 +159,7 @@ private:
 
   void mirror_image_enable();
   void handle_mirror_image_enable(int r);
-
+//添加设置head image的imageid map函数
   void add_object_map_snapid();
   void handle_add_object_map_snapid(int r);
 

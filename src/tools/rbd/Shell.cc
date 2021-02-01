@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <iostream>
 #include <set>
+//tianjia
+#include <fstream>
 
 namespace rbd {
 
@@ -130,6 +132,17 @@ int Shell::execute(int argc, const char **argv) {
   std::vector<std::string> command_spec;
   get_command_spec(arguments, &command_spec);
   bool is_alias = true;
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+    if(!ofile.is_open()){
+        cout<<"open file error!";
+    }
+    ofile<<"come to tools::rbd::Shell.cc::execute()|| command_spec:"<<command_spec<<" command size:"<<command_spec.size()<<"\n";
+//    for(unsigned int i=0;i<command_spec.size();++i){
+//        ofile<<command_spec[i]<<" ";
+//    }
+    ofile.close();
 
   if (command_spec.empty() || command_spec == CommandSpec({"help"})) {
     // list all available actions

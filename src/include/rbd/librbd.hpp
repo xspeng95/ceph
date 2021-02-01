@@ -781,7 +781,8 @@ private:
 
   Image(const Image& rhs);
   const Image& operator=(const Image& rhs);
-
+  //添加一个类型标记是否树已经加载
+  bool tree_is_load;
   image_ctx_t ctx;
 };
 

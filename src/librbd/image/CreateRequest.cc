@@ -584,9 +584,9 @@ void CreateRequest<I>::add_object_map_snapid(){
     }
     ofile<<"come to librbd::image::CreateRequest.cc::add_object_map_snapid()(cls_client)\n";
 
-    cls_client::set_object_map_snapid(&op, Striper::get_num_objects(m_layout, m_size), m_image_id);
+    cls_client::set_object_map_imageid(&op, Striper::get_num_objects(m_layout, m_size), m_image_id);
 
-    ofile<<"come to librbd::image::CreateRequest.cc::set_object_map_snapid()(cls_client)\n";
+    ofile<<"come to librbd::image::CreateRequest.cc::set_object_map_imageid()(cls_client)\n";
     using klass = CreateRequest<I>;
     librados::AioCompletion *comp =
             create_rados_callback<klass, &klass::handle_add_object_map_snapid>(this);
@@ -601,7 +601,7 @@ template<typename I>
 void CreateRequest<I>::handle_add_object_map_snapid(int r){
     ldout(m_cct, 15) << "add_abject_snapid" << dendl;
     if (r < 0) {
-        lderr(m_cct) << "cannot enable mirroring: " << cpp_strerror(r)
+        lderr(m_cct) << "cannot enable add_object_map_snapid: " << cpp_strerror(r)
         << dendl;
         m_r_saved = r;
         journal_remove();
