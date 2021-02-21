@@ -899,7 +899,8 @@ void RefreshRequest<I>::send_v2_get_snap_object_map_snapid(){
         ofile<<"come to librbd::image::RefreshRequest.cc::send_v2_get_snap_object_map_snapid()|| snap_id:"<<snap_id<<"\n";
         librados::ObjectReadOperation op;
         //cls_client就是让op做什么事--read
-        cls_client::get_object_map_snapid_start(&op,m_image_ctx.object_count,snap_id);
+        int obj_count=m_image_ctx.get_object_count(snap_id);
+        cls_client::get_object_map_snapid_start(&op,obj_count,snap_id);
         std::string oid(RefreshRequest<I>::object_map_name(m_image_ctx.id, snap_id));
         using klass=RefreshRequest<I>;
         librados::AioCompletion *comp = create_rados_callback<

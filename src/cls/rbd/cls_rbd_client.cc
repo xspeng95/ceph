@@ -132,7 +132,7 @@ namespace librbd {
             }
             ofile<<"bufferlist.size:"<<object_map_out->length()<<"\n";
             ofile.close();
-            // object_map_out->clear();
+           // object_map_out->clear();
             for(uint64_t i=0;i<object_count+2;i++){
                 try {
                     decode(snap_id_temp,*it);
