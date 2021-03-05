@@ -237,6 +237,10 @@ public:
 
   int open(IoCtx& io_ctx, Image& image, const char *name);
   int open(IoCtx& io_ctx, Image& image, const char *name, const char *snapname);
+  //add open rbd with snaptree
+  int open_snaptree(IoCtx& io_ctx, Image& image, const char *name, bool is_snaptree);
+  int open_snaptree(IoCtx& io_ctx, Image& image, const char *name, const char *snapname,bool is_snaptree);
+
   int open_by_id(IoCtx& io_ctx, Image& image, const char *id);
   int open_by_id(IoCtx& io_ctx, Image& image, const char *id, const char *snapname);
   int aio_open(IoCtx& io_ctx, Image& image, const char *name,
@@ -775,6 +779,9 @@ public:
   int list_watchers(std::list<image_watcher_t> &watchers);
 
   int config_list(std::vector<config_option_t> *options);
+
+  //add
+  int get_snap_tree(const char *image_id);
 
 private:
   friend class RBD;

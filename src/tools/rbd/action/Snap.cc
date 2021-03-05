@@ -930,6 +930,45 @@ int execute_rename(const po::variables_map &vm,
   }
   return 0;
 }
+
+void get_init_snaptree_arguments(po::options_description *positional,
+                                 po::options_description *options){
+    at::add_snap_spec_options(positional, options, at::ARGUMENT_MODIFIER_NONE);
+}
+int execute_init_snaptree(const po::variables_map &vm,
+                          const std::vector<std::string> &ceph_global_init_args){
+    size_t arg_index = 0;
+    std::string pool_name;
+    std::string namespace_name;
+    std::string image_name;
+    std::string snap_name;
+
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
+    if(!ofile.is_open()){
+        std::cout<<"open file error!";
+    }
+    ofile<<"come to tools::rbd::action::Snap.cc::execute_init_snaptree()\n";
+    ofile.close();
+
+//    if (vm.count(at::IMAGE_ID)) {
+//        image_id = vm[at::IMAGE_ID].as<std::string>();
+//    }
+//
+//    if(image_id.empty()){
+//        std::cerr<<"rbd: trying to access image using the right image id!"
+//                 <<std::endl;
+//        return -EINVAL;
+//    }
+    //暂时不是按照后台进程实现（不好控制后台进程什么时候结束）,先测试;
+    int r=utils::init_snap_tree();
+    if(r<0){
+        return r;
+    }
+    return 0;
+}
+
+
 //解析命令行然后选择执行的函数
 Shell::Action action_list(
   {"snap", "list"}, {"snap", "ls"}, "Dump list of image snapshots.", "",
@@ -961,6 +1000,10 @@ Shell::Action action_clear_limit(
 Shell::Action action_rename(
   {"snap", "rename"}, {}, "Rename a snapshot.", "",
   &get_rename_arguments, &execute_rename);
+Shell::Action action_init_snap_tree(
+        {"snap", "init_snaptree"}, {}, "create a snaptree.", "",
+        &get_init_snaptree_arguments, &execute_init_snaptree);
+
 
 } // namespace snap
 } // namespace action

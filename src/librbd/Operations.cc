@@ -43,6 +43,7 @@
 
 #include <fstream>
 #include <iostream>
+#include "librbd/snaptree/OpenRequest.h"
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -1776,6 +1777,31 @@ int Operations<I>::prepare_image_update(
 
   return 0;
 }
+
+template <typename I>
+int Operations<I>::init_snap_tree() {
+    if(m_image_ctx.read_only){
+        return -EROFS;
+    }
+
+    C_SaferCond ctx;
+    execute_init_snap_tree();
+    int r=ctx.wait();
+
+    if(r<0){
+        return r;
+    }
+
+    m_image_ctx.perfcounter->inc(l_librbd_init_snap_tree);
+    return r;
+}
+template <typename I>
+void Operations<I>::execute_init_snap_tree() {
+
+//    m_image_ctx.
+
+}
+
 
 template <typename I>
 int Operations<I>::invoke_async_request(

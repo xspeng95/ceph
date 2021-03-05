@@ -14,6 +14,9 @@
 #include "librbd/image/RefreshRequest.h"
 #include "librbd/image/SetSnapRequest.h"
 
+//add
+#include "librbd/snaptree/OpenRequest.h"
+
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
 #define dout_prefix *_dout << "librbd::ImageState: " << this << " "
@@ -22,6 +25,7 @@ namespace librbd {
 
 using util::create_async_context_callback;
 using util::create_context_callback;
+
 
 class ImageUpdateWatchers {
 public:
@@ -268,6 +272,36 @@ void ImageState<I>::open(uint64_t flags, Context *on_finish) {
   action.refresh_seq = m_refresh_seq;
 
   execute_action_unlock(action, on_finish);
+}
+//add
+template <typename I>
+int ImageState<I>::open_snaptree(uint64_t flags,bool is_snaptree) {
+    if(!is_snaptree){
+        return -1;
+    }
+    C_SaferCond ctx;
+    open_snaptree(flags, &ctx);
+       int r = ctx.wait();
+       if (r < 0) {
+           delete m_image_ctx;
+       }
+       return r;
+}
+
+template <typename I>
+void ImageState<I>::open_snaptree(uint64_t flags, Context *on_finish) {
+
+    CephContext *cct = m_image_ctx->cct;
+    ldout(cct, 20) << __func__ << dendl;
+
+    m_lock.lock();
+    ceph_assert(m_state == STATE_UNINITIALIZED);
+    m_open_flags = flags;
+
+    Action action(ACTION_TYPE_OPEN_SNAPTREE);
+    action.refresh_seq = m_refresh_seq;
+
+    execute_action_unlock(action, on_finish);
 }
 
 template <typename I>
@@ -542,6 +576,8 @@ void ImageState<I>::execute_next_action_unlock() {
     return;
   case ACTION_TYPE_LOCK:
     send_prepare_lock_unlock();
+    case ACTION_TYPE_OPEN_SNAPTREE:
+        send_open_unlock_snaptree();
     return;
   }
   ceph_abort();
@@ -601,6 +637,24 @@ void ImageState<I>::send_open_unlock() {
 
   m_lock.unlock();
   req->send();
+}
+//add
+template <typename I>
+void ImageState<I>::send_open_unlock_snaptree() {
+    ceph_assert(ceph_mutex_is_locked(m_lock));
+    CephContext *cct = m_image_ctx->cct;
+    ldout(cct, 10) << this << " " << __func__ << dendl;
+
+    m_state = STATE_OPENING;
+
+//    Context *ctx = create_async_context_callback(
+//            *m_image_ctx, create_context_callback<
+//            ImageState<I>, &ImageState<I>::handle_open>(this));
+//        snaptree::OpenRequest<I> *req = snaptree::OpenRequest<I>::create(
+//            m_image_ctx, m_open_flags, ctx);
+
+    m_lock.unlock();
+//    req->send();
 }
 
 template <typename I>

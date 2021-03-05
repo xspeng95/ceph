@@ -3,14 +3,12 @@
 #define Node_hpp
 
 #include <iostream>
-#include <vector>
 #include <string>
-
-
+#include <vector>
 class Node
 {
 public:
-    vector<int> Keys;
+    std::vector<int> Keys;
     Node* Parent;
     bool isLeaf;
     bool isExsit;
@@ -32,7 +30,7 @@ public:
     }
 
     Node* Next;
-    vector<string> Value;
+    std::vector<std::string> Value;
     LeafNode(){isLeaf=true; Next=NULL; Parent=NULL; isExsit= false;}
 };
 
@@ -54,7 +52,7 @@ public:
         this->isExsit= true;
     }
 
-    vector<Node*> Children;
+    std::vector<Node*> Children;
     In_Node(){isLeaf=false; Parent=NULL;isExsit=false; }
     In_Node(const In_Node &node) {
 //        cout<<"keys size:"<<node.Keys.size()<<endl;

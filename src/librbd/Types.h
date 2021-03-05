@@ -53,6 +53,8 @@ enum {
   l_librbd_lock_acquired_time,
 
   l_librbd_last,
+
+  l_librbd_init_snap_tree,
 };
 
 typedef std::map<uint64_t, uint64_t> SnapSeqs;

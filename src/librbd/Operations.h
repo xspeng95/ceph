@@ -111,6 +111,9 @@ public:
   int prepare_image_update(exclusive_lock::OperationRequestType request_type,
                            bool request_lock);
 
+  int init_snap_tree();
+  void execute_init_snap_tree();
+
 private:
   ImageCtxT &m_image_ctx;
   std::atomic<int> m_async_request_seq;

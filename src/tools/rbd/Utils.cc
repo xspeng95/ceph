@@ -18,8 +18,14 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
-//tianjia
+//add
 #include<fstream>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 namespace rbd {
 namespace utils {
@@ -770,7 +776,33 @@ int open_image(librados::IoCtx &io_ctx, const std::string &image_name,
   }
   return 0;
 }
+//add
+    int open_image_snaptree(librados::IoCtx &io_ctx, const std::string &image_name,
+                   bool read_only, librbd::Image *image) {
+        int r;
+        librbd::RBD rbd;
 
+        ofstream ofile;
+        ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+        if(!ofile.is_open()){
+            cout<<"open file error!";
+        }
+        ofile<<"come to tools::rbd::Utils.cc()::open_image_snaptree()\n";
+        ofile.close();
+
+        if (read_only) {
+            r = rbd.open_read_only(io_ctx, *image, image_name.c_str(), NULL);
+        } else {
+            r = rbd.open_snaptree(io_ctx, *image, image_name.c_str(), true);
+        }
+
+        if (r < 0) {
+            std::cerr << "rbd: error opening image " << image_name << ": "
+                      << cpp_strerror(r) << std::endl;
+            return r;
+        }
+        return 0;
+    }
 int open_image_by_id(librados::IoCtx &io_ctx, const std::string &image_id,
                      bool read_only, librbd::Image *image) {
   int r;
@@ -806,7 +838,7 @@ int init_and_open_image(const std::string &pool_name,
         cout<<"open file error!";
     }
     ofile<<"come to tools::rbd::Utils.cc()::init_and_open_image()\n";
-    ofile.close();
+
 
   if (image_id.empty()) {
     r = open_image(*io_ctx, image_name, read_only, image);
@@ -816,6 +848,30 @@ int init_and_open_image(const std::string &pool_name,
   if (r < 0) {
     return r;
   }
+
+  //链接共享内存，通知构建snaptree
+  int shmid = shmget((key_t)1233,sizeof(struct shared_image_id),0666|IPC_CREAT);
+  if(shmid==-1){
+      std::cerr << "client failed to link shared memory: " << cpp_strerror(r)
+      << std::endl;
+      return shmid;
+  }
+  void *shm_update_address=shmat(shmid,NULL,0);
+  if(shm_update_address==(void *)-1){
+      std::cerr << "rbd: client shm_update_address shmat failed!" << std::endl;
+      return -1;
+  }
+  struct shared_image_id *shared_stuff = (struct shared_image_id *)shm_update_address;
+  //只是简单实现，需要实现同步操作
+  //to do...
+  shared_stuff->ref[0]=1;
+  shared_stuff->target_pool_name=pool_name;
+  shared_stuff->target_namespace_name=namespace_name;
+  shared_stuff->target_image_name=image_name;
+//  shared_stuff->target_image_id=image_id;
+    ofile<<"come to tools::rbd::Utils.cc()::init_and_open_image()|| shmid=:"<<shmid<<"/n";
+    ofile<<"come to tools::rbd::Utils.cc()::init_and_open_image()|| target_image_name=:"<<shared_stuff->target_image_name<<"/n";
+    ofile.close();
 
   if (!snap_name.empty()) {
     r = snap_set(*image, snap_name);
@@ -1086,6 +1142,74 @@ int mgr_command(librados::Rados& rados, const std::string& cmd,
   }
 
   return 0;
+}
+
+int init_snap_tree(){
+    ofstream ofile;
+    ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
+    if(!ofile.is_open()){
+        std::cout<<"open file error!";
+    }
+    ofile<<"come to tools::rbd::Utils.cc::init_snap_tree()\n";
+
+
+//创建共享内存
+    struct shared_image_id *shared_stuff;
+    //创建两个共享内存，把更新和snaptree分开存放
+    int shmid_update=shmget((key_t)1233,sizeof(struct shared_image_id),0666|IPC_CREAT);
+    int shmid_snaptree=shmget((key_t)1234,sizeof(struct shm_snap_tree_list)*100,0666|IPC_CREAT);
+    if(shmid_update==-1){
+        std::cerr << "rbd: shmid_update shmget failed!" << std::endl;
+        return shmid_update;
+    }
+    if(shmid_snaptree==-1){
+        std::cerr << "rbd: shmid_snaptree shmget failed!" << std::endl;
+        return shmid_snaptree;
+    }
+    //链接到当前进程地址空间
+    void *shm_update_address=shmat(shmid_update,NULL,0);
+    void *shm_snaptree_address=shmat(shmid_update,NULL,0);
+    if(shm_update_address==(void *)-1){
+        std::cerr << "rbd: shm_update_address shmat failed!" << std::endl;
+        return -1;
+    }
+    if(shm_snaptree_address==(void *)-1){
+        std::cerr << "rbd: shm_snaptree_address shmat failed!" << std::endl;
+        return -1;
+    }
+    shared_stuff=(struct shared_image_id*)shm_update_address;
+    shared_stuff->ref[0]=0;
+
+//从共享内存中获取到相应的image_id和配套的参数
+
+    while(true){
+        //image_id共享内存，由其他进程传递，由该守护进程构建该image的snaptree
+//        ofile<<"come to tools::rbd::Utils.cc::init_snap_tree()||wait!!!!\n";
+        if(shared_stuff->ref[0]!=0){
+            //前台有进程需要snaptree,拉取该image_id的snaptree
+            std::string m_image_name=shared_stuff->target_image_name;
+            std::string m_namespace_name=shared_stuff->target_namespace_name;
+            std::string m_pool_name=shared_stuff->target_pool_name;
+            ofile<<"come to tools::rbd::Utils.cc::init_snap_tree()||m_image_name:"<<m_image_name<<"\n";
+            ofile<<"come to tools::rbd::Utils.cc::init_snap_tree()||m_pool_name:"<<m_pool_name<<"\n";
+            librados::Rados rados;
+            librados::IoCtx io_ctx;
+            librbd::Image image;
+            break;
+//            //初始化目标镜像
+//            int r = init(m_pool_name, m_namespace_name, &rados, &io_ctx);
+//            if (r < 0) {
+//                return r;
+//            }
+//            r=open_image_snaptree(io_ctx,m_image_name, false,&image);
+//            if (r < 0) {
+//                return r;
+//            }
+        }
+    }
+
+    ofile<<"come to tools::rbd::Utils.cc::init_snap_tree()||after while";
+    ofile.close();
 }
 
 } // namespace utils

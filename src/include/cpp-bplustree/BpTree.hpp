@@ -15,7 +15,6 @@
 #include <vector>
 #include "Node.hpp"
 
-
 class BpTree
 {
 private:
@@ -38,9 +37,9 @@ public:
         head=new In_Node(node);
 
         head->isExsit=true;
-        cout<<"construct ..."<<"\n";
+        std::cout<<"construct ..."<<"\n";
     }
-    void insert(int key, string value)
+    void insert(int key, std::string value)
     {
         Node* t=this->head;
 //    cout<<" isLeaf:"<<t->isLeaf<<endl;
@@ -64,7 +63,7 @@ public:
         else{
             for(size_t i=0;i<t->Keys.size();++i){ //insert into the leaf node
                 if(t->Keys[i]==key){
-                    cout<<"You cannot insert duplicate keys!"<<"\n";
+                    std::cout<<"You cannot insert duplicate keys!"<<"\n";
                     return;
                 }
                 else if(t->Keys[i]>key){
@@ -166,7 +165,7 @@ public:
             }
         }
         if(!flag){
-            cout<<"The key you want to delete does not exist!"<<"\n";
+            std::cout<<"The key you want to delete does not exist!"<<"\n";
             return;
         }
         if(((LeafNode*)t)->Value.size()<ceil((n+1)/2) && t->Parent!=NULL){
@@ -300,7 +299,7 @@ public:
 
 
 
-    string find(int key){
+    std::string find(int key){
         Node* t=this->head;
         while (!t->isLeaf){ //find the proper location
             int flag = 0;
@@ -326,7 +325,7 @@ public:
 
 
 
-    int insertSnapValue(int key, string value, In_Node  fathernode) {
+    int insertSnapValue(int key, std::string value, In_Node  fathernode) {
         Node *t=this->head;
 //        In_Node* rootnode=(In_Node*)t;
         LeafNode* leafNew;
@@ -444,22 +443,22 @@ public:
             }
         }
 
-        cout<<"This key does not exist in this B+ tree!"<<"\n";
+        std::cout<<"This key does not exist in this B+ tree!"<<"\n";
         return 0;
     }
 
     void printKeys()
     {
-        ofstream ofile;
-        ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+        std::ofstream ofile;
+        ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
         if(!ofile.is_open()){
-            cout<<"open file error!";
+            std::cout<<"open file error!";
         }
         if(head->Keys.size()==0){
             ofile<<"[]"<<"\n";
             return;
         }
-        vector<Node*> q;
+        std::vector<Node*> q;
         q.push_back(head);
         while(q.size()){
             unsigned long size = q.size();
@@ -484,10 +483,10 @@ public:
     }
     void printValuesSnap() {
         if(this->head->Keys.size()==0){
-            cout<<"[]"<<"\n";
+            std::cout<<"[]"<<"\n";
             return;
         }
-        vector<Node*> q;
+        std::vector<Node*> q;
         q.push_back(head);
         while(q.size()){
             unsigned long size = q.size();
@@ -503,22 +502,22 @@ public:
 
             int firstLastInNodePo=q.size()-leafNodeNum;
             LeafNode* tempLeafNode;
-            string tempValue;
+            std::string tempValue;
             for(size_t i=firstLastInNodePo;i<q.size();i++){
 
                 for(size_t j=0;j<((In_Node*)q[i])->Children.size();j++){
-                    cout<<"[";
+                    std::cout<<"[";
                     tempLeafNode=(LeafNode*)(((In_Node*)q[i])->Children[j]);
                     for(size_t m=0;m<tempLeafNode->Value.size();m++){
                         tempValue=tempLeafNode->Value[m];
                         if(m==tempLeafNode->Value.size()-1){
-                            cout<<tempValue;
+                            std::cout<<tempValue;
                         } else{
-                            cout<<tempValue<<",";
+                            std::cout<<tempValue<<",";
                         }
 
                     }
-                    cout<<"]";
+                    std::cout<<"]";
                 }
 
             }
@@ -540,10 +539,10 @@ public:
 
     void printValues()
     {
-        ofstream ofile;
-        ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",ios::app);
+        std::ofstream ofile;
+        ofile.open("/home/xspeng/Desktop/alisnap/myceph.log",std::ios::app);
         if(!ofile.is_open()){
-            cout<<"open file error!";
+            std::cout<<"open file error!";
         }
         if(head->Keys.size()==0){
             ofile<<"[]"<<"\n";
@@ -562,7 +561,7 @@ public:
         }
         ofile.close();
     }
-    string updateValue(int key,string value)
+    std::string updateValue(int key,std::string value)
     {
         Node* t=this->head;
         while (!t->isLeaf){ //find the proper location

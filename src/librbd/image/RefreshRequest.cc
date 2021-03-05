@@ -606,6 +606,7 @@ Context *RefreshRequest<I>::handle_v2_get_pool_metadata(int *result) {
 template <typename I>
 void RefreshRequest<I>::send_v2_get_op_features() {
   if ((m_features & RBD_FEATURE_OPERATIONS) == 0LL) {
+      //从这里进入了
     send_v2_get_group();
     return;
   }
@@ -853,10 +854,12 @@ Context *RefreshRequest<I>::handle_v2_get_snapshots(int *result) {
     }
     ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snapshots()\n";
 
-    send_v2_get_snap_object_map_snapid();
+//    send_v2_get_snap_object_map_snapid();
 
     ofile<<"come to librbd::image::RefreshRequest.cc::handle_v2_get_snapshots()|| after get snap id\n";
     ofile.close();
+
+    send_v2_refresh_parent();
   return nullptr;
 }
 //设置每个映射的数据块的名称

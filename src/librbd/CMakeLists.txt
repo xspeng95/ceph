@@ -135,6 +135,9 @@ set(librbd_internal_srcs
   object_map/SnapshotRollbackRequest.cc
   object_map/UnlockRequest.cc
   object_map/UpdateRequest.cc
+#  snaptree/SnapshotCreateRequest.cc
+#  snaptree/Request.cc
+  snaptree/OpenRequest.cc
   operation/DisableFeaturesRequest.cc
   operation/EnableFeaturesRequest.cc
   operation/FlattenRequest.cc

@@ -1,0 +1,174 @@
+//
+// Created by xspeng on 2021/2/26.
+//
+
+#ifndef CEPH_SNAP_TREE_OPENREQUEST_H
+#define CEPH_SNAP_TREE_OPENREQUEST_H
+
+#include "include/buffer.h"
+#include <map>
+#include <string>
+#include <include/fs_types.h>
+#include <common/snap_types.h>
+#include "include/cpp-bplustree/BpTree.hpp"
+class Context;
+
+namespace librbd {
+
+    class ImageCtx;
+
+    namespace snaptree {
+
+        template <typename ImageCtxT = ImageCtx>
+        class OpenRequest {
+        public:
+            static OpenRequest *create(ImageCtxT *image_ctx, uint64_t flags,
+                                       Context *on_finish) {
+                return new OpenRequest(image_ctx, flags, on_finish);
+            }
+
+            void send();
+
+        private:
+            /**
+             * @verbatim
+             *
+             * <start>
+             *    |
+             *    | (v1)
+             *    |-----> V1_DETECT_HEADER
+             *    |           |
+             *    |           \-------------------------------\
+             *    | (v2)                                      |
+             *    \-----> V2_DETECT_HEADER                    |
+             *                |                               |
+             *                v                               |
+             *            V2_GET_ID|NAME                      |
+             *                |                               |
+             *                v (skip if have name)           |
+             *            V2_GET_NAME_FROM_TRASH              |
+             *                |                               |
+             *                v                               |
+             *            V2_GET_INITIAL_METADATA             |
+             *                |                               |
+             *                v                               |
+             *            V2_GET_STRIPE_UNIT_COUNT (skip if   |
+             *                |                     disabled) |
+             *                v                               |
+             *            V2_GET_CREATE_TIMESTAMP             |
+             *                |                               |
+             *                v                               |
+             *            V2_GET_ACCESS_MODIFIY_TIMESTAMP     |
+             *                |                               |
+             *                v                               |
+             *            V2_GET_DATA_POOL --------------> REFRESH
+             *                                                |
+             *                                                v
+             *                                             INIT_PARENT_CACHE(skip if
+             *                                                |               disable)
+             *                                                v
+             *                                             INIT_CACHE
+             *                                                |
+             *                                                v
+             *                                             REGISTER_WATCH (skip if
+             *                                                |            read-only)
+             *                                                v
+             *                                             SET_SNAP (skip if no snap)
+             *                                                |
+             *                                                v
+             *                                             <finish>
+             *                                                ^
+             *     (on error)                                 |
+             *    * * * * * * > CLOSE ------------------------/
+             *
+             * @endverbatim
+             */
+
+            OpenRequest(ImageCtxT *image_ctx, uint64_t flags, Context *on_finish);
+
+            ImageCtxT *m_image_ctx;
+            bool m_skip_open_parent_image;
+            Context *m_on_finish;
+
+            file_layout_t m_layout;
+            uint64_t m_count;
+            uint64_t m_size;
+            uint64_t m_image_size;
+            snapid_t m_snap_id;
+
+            ::SnapContext m_snapc;
+            bufferlist m_out_bl;
+            bufferlist object_map_imageid_bl;
+            int m_error_result;
+
+
+            void send_v1_detect_header();
+            Context *handle_v1_detect_header(int *result);
+
+            void send_v2_detect_header();
+            Context *handle_v2_detect_header(int *result);
+
+            void send_v2_get_id();
+            Context *handle_v2_get_id(int *result);
+
+            void send_v2_get_name();
+            Context *handle_v2_get_name(int *result);
+
+            void send_v2_get_name_from_trash();
+            Context *handle_v2_get_name_from_trash(int *result);
+
+            void send_v2_get_initial_metadata();
+            Context *handle_v2_get_initial_metadata(int *result);
+
+            void send_v2_get_stripe_unit_count();
+            Context *handle_v2_get_stripe_unit_count(int *result);
+
+            void send_v2_get_create_timestamp();
+            Context *handle_v2_get_create_timestamp(int *result);
+
+            void send_v2_get_access_modify_timestamp();
+            Context *handle_v2_get_access_modify_timestamp(int *result);
+
+            void send_v2_get_data_pool();
+            Context *handle_v2_get_data_pool(int *result);
+
+            void send_v2_get_image_object_map_snapid();
+            Context *handle_v2_get_image_object_map_snapid(int *result);
+
+            void send_v2_get_snap_object_map_snapid();
+            Context *handle_v2_get_snap_object_map_snapid(int *result);
+
+            std::string object_map_name(const std::string &image_id,
+                                        uint64_t snap_id);
+
+            void send_v2_get_snapshots();
+            Context *handle_v2_get_snapshots(int *result);
+
+            void send_refresh();
+            Context *handle_refresh(int *result);
+
+            Context* send_parent_cache(int *result);
+            Context* handle_parent_cache(int *result);
+
+            Context *send_init_cache(int *result);
+
+            Context *send_register_watch(int *result);
+            Context *handle_register_watch(int *result);
+
+            Context *send_set_snap(int *result);
+            Context *handle_set_snap(int *result);
+
+            Context *finalize(int r);
+
+            void send_close_image(int error_result);
+            Context *handle_close_image(int *result);
+
+        };
+
+    } // namespace snaptree
+} // namespace librbd
+
+extern template class librbd::snaptree::OpenRequest<librbd::ImageCtx>;
+
+
+#endif //CEPH_SNAP_TREE_OPENREQUEST_H

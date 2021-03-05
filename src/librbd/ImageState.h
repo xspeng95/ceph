@@ -28,6 +28,9 @@ public:
 
   int open(uint64_t flags);
   void open(uint64_t flags, Context *on_finish);
+//add
+  int open_snaptree(uint64_t flags, bool is_snaptree);
+  void open_snaptree(uint64_t flags, Context *on_finish);
 
   int close();
   void close(Context *on_finish);
@@ -68,7 +71,8 @@ private:
     ACTION_TYPE_CLOSE,
     ACTION_TYPE_REFRESH,
     ACTION_TYPE_SET_SNAP,
-    ACTION_TYPE_LOCK
+    ACTION_TYPE_LOCK,
+    ACTION_TYPE_OPEN_SNAPTREE
   };
 
   struct Action {
@@ -125,6 +129,8 @@ private:
 
   void send_open_unlock();
   void handle_open(int r);
+
+  void send_open_unlock_snaptree();
 
   void send_close_unlock();
   void handle_close(int r);

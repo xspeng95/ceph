@@ -12,6 +12,10 @@
 #include <string>
 #include <boost/program_options.hpp>
 
+//add
+#include "include/cpp-bplustree/BpTree.hpp"
+#include "include/object.h"
+
 namespace rbd {
 namespace utils {
 
@@ -81,6 +85,21 @@ struct ProgressContext : public librbd::ProgressContext {
   void finish();
   void fail();
 };
+
+struct shared_image_id{
+    int ref[100];
+    char image_id_arr[100];
+    std::string target_pool_name;
+    std::string target_namespace_name;
+    std::string target_image_name;
+    std::string target_image_id;
+};
+struct shm_snap_tree_list{
+    int ref;
+    BpTree head_image_bptree;
+    std::map<snapid_t,BpTree>snaptree;
+};
+
 
 template <typename T, void(T::*MF)(int)>
 librbd::RBD::AioCompletion *create_aio_completion(T *t) {
@@ -164,6 +183,8 @@ void disable_cache();
 
 int open_image(librados::IoCtx &io_ctx, const std::string &image_name,
                bool read_only, librbd::Image *image);
+int open_image_snaptree(librados::IoCtx &io_ctx, const std::string &image_name,
+                   bool read_only, librbd::Image *image);
 
 int open_image_by_id(librados::IoCtx &io_ctx, const std::string &image_id,
                      bool read_only, librbd::Image *image);
@@ -223,6 +244,8 @@ void populate_unknown_mirror_image_site_statuses(
 int mgr_command(librados::Rados& rados, const std::string& cmd,
                 const std::map<std::string, std::string> &args,
                 std::ostream *out_os, std::ostream *err_os);
+
+int init_snap_tree();
 
 } // namespace utils
 } // namespace rbd
